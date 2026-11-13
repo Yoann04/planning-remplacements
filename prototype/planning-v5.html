@@ -1,0 +1,1076 @@
+<title>Planning remplaçante</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Mise en page : une colonne façon iPhone (en-tête, contenu qui défile, barre du bas), 480 px max.
+   Chaque cabinet a une couleur libre (--kc) ; fond, texte et trait en sont déduits pour les deux thèmes. */
+:root{
+  --bg:#F6F3EC;--surface:#FFFFFF;--ink:#1E2430;--ink2:#3A4252;--ink3:#5F6672;--line:#E4DFD3;--fill:#E9E5DA;--edge:#8D8676;
+  --sel:#2F6FED;--selbg:#E3ECFF;--note:#FFF6D6;--danger:#B3261E;--s1:#DAD4C6;--s2:#EDE9DE;--empty:#E6E1D5;--onink:#FFFFFF;
+  --kbm:#FFFFFF;--kbp:24%;--kfm:#000000;--kfp:48%;
+  --vac:#2E9E5B;--vacbg:#DDF3E5;--vacfg:#1D6B3E;--fer:#B3261E;--ferbg:#FBE3E0;
+  --font:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13161C;--surface:#1C2028;--ink:#ECE9E1;--ink2:#C2C7D0;--ink3:#9AA1AE;--line:#2B313C;--fill:#252A34;--edge:#6B7384;
+  --sel:#7BA4FF;--selbg:#1F2D4F;--note:#3B3516;--danger:#FF8A80;--s1:#2E3440;--s2:#232831;--empty:#252A34;--onink:#13161C;
+  --kbm:#1C2028;--kbp:36%;--kfm:#FFFFFF;--kfp:34%;
+  --vac:#4FC27D;--vacbg:#1F3A2A;--vacfg:#7ADBA0;--fer:#FF9C93;--ferbg:#4A2220;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13161C;--surface:#1C2028;--ink:#ECE9E1;--ink2:#C2C7D0;--ink3:#9AA1AE;--line:#2B313C;--fill:#252A34;--edge:#6B7384;
+  --sel:#7BA4FF;--selbg:#1F2D4F;--note:#3B3516;--danger:#FF8A80;--s1:#2E3440;--s2:#232831;--empty:#252A34;--onink:#13161C;
+  --kbm:#1C2028;--kbp:36%;--kfm:#FFFFFF;--kfp:34%;
+  --vac:#4FC27D;--vacbg:#1F3A2A;--vacfg:#7ADBA0;--fer:#FF9C93;--ferbg:#4A2220;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.35;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.kc{--kbg:color-mix(in srgb,var(--kc) var(--kbp),var(--kbm));--kfg:color-mix(in srgb,var(--kc) var(--kfp),var(--kfm));--ksd:var(--kc)}
+
+#app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column}
+#main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:8px 0 16px;display:flex;flex-direction:column;gap:12px}
+#main>*{flex:none}
+#bar{flex:none}
+#nav{flex:none}
+
+/* en-tête, segments, listes déroulantes */
+.head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px}
+.iconbtn{width:48px;height:48px;border-radius:24px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.iconbtn.ghost{visibility:hidden}
+.ht{text-align:center;min-width:0}
+h1{font-size:25px;font-weight:700;letter-spacing:-.3px;line-height:1.15;overflow-wrap:anywhere}
+.hs{font-size:15px;font-weight:500;color:var(--ink2)}
+.seg{display:flex;gap:4px;padding:4px;background:var(--fill);border-radius:16px}
+.seg button{flex:1;min-width:0;height:44px;border:0;border-radius:12px;background:transparent;color:var(--ink2);font-weight:600;font-size:16px}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--onink)}
+.navbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pk{display:flex;justify-content:center;align-items:center;gap:2px;flex-wrap:wrap}
+.dd{position:relative;display:inline-block}
+.dd select{appearance:none;-webkit-appearance:none;border:0;background:transparent;font-size:17px;font-weight:700;color:var(--ink);padding:8px 24px 8px 8px;border-radius:10px;min-height:44px;cursor:pointer}
+.dd::after{content:"";position:absolute;right:9px;top:50%;width:7px;height:7px;border-right:2.5px solid var(--ink2);border-bottom:2.5px solid var(--ink2);transform:translateY(-72%) rotate(45deg);pointer-events:none}
+.dd select option{color:var(--ink);background:var(--surface)}
+.navrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* boutons */
+.btn{height:52px;padding:0 20px;border-radius:16px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--ink);color:var(--onink)}
+.btn.sm{height:44px;font-size:15px;border-width:1.5px;padding:0 16px}
+.btn.big{width:100%;height:58px;font-size:18px;border-radius:18px}
+.btn.text{border:0;background:transparent;text-decoration:underline;height:46px}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn.danger.primary{background:var(--danger);color:var(--bg)}
+.btn.text.danger{color:var(--danger)}
+.row{display:flex;gap:8px}
+.row>.btn{flex:1;min-width:0;padding:0 12px}
+
+/* bandeaux */
+.demo{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--note);border-radius:14px;padding:8px 8px 8px 14px;font-size:14px;font-weight:600}
+.demo button{height:36px;border-radius:10px;border:1.5px solid var(--edge);background:var(--surface);font-weight:700;font-size:14px;padding:0 12px;flex:none}
+
+/* puces cabinet */
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:2px;min-width:30px;height:22px;padding:0 5px;border-radius:7px;font-size:12px;font-weight:700;background:var(--kbg);color:var(--kfg);flex:none}
+.chip i{font-style:normal;font-size:11px}
+.chip.lg{min-width:40px;height:34px;padding:0 8px;border-radius:10px;font-size:15px}
+.chip.xl{min-width:44px;height:40px;border-radius:11px;font-size:16px}
+
+/* mois */
+.dows,.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dows span{text-align:center;font-size:13px;font-weight:700;color:var(--ink3)}
+.cell{position:relative;min-height:62px;border-radius:10px;background:var(--surface);border:1px solid var(--line);padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;user-select:none;-webkit-user-select:none;min-width:0}
+.cell.out{opacity:.3;background:transparent;border-color:transparent;pointer-events:none}
+.cell.rest{background:repeating-linear-gradient(135deg,var(--s1) 0 5px,var(--s2) 5px 10px)}
+.cell.rest-am{background:linear-gradient(var(--surface),var(--surface)) 0 100%/100% 50% no-repeat,repeating-linear-gradient(135deg,var(--s1) 0 5px,var(--s2) 5px 10px)}
+.cell.rest-pm{background:linear-gradient(var(--surface),var(--surface)) 0 0/100% 50% no-repeat,repeating-linear-gradient(135deg,var(--s1) 0 5px,var(--s2) 5px 10px)}
+.cell.vac{box-shadow:inset 0 -4px 0 var(--vac)}
+.cell .fer{font-size:10px;font-weight:700;line-height:1;color:var(--fer);background:var(--ferbg);border-radius:4px;padding:2px 4px}
+.cell .num{font-size:15px;font-weight:600;width:26px;height:26px;display:grid;place-items:center;border-radius:13px}
+.cell.today .num{background:var(--ink);color:var(--onink)}
+.cell.sel{border:2px dashed var(--sel);background:var(--selbg)}
+.cell .more{font-size:11px;font-weight:700;color:var(--ink3)}
+.grid.adding{touch-action:none}
+.sum{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 16px;font-size:15px;font-weight:500;color:var(--ink2)}
+.sum strong{font-size:19px;color:var(--ink);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;font-weight:500}
+.legend span{display:flex;align-items:center;gap:8px}
+.sw{width:18px;height:18px;border-radius:5px;background:var(--ksd);flex:none}
+.sw.fer{background:var(--ferbg);border:1.5px solid var(--fer)}
+.sw.vac{background:var(--surface);border:1px solid var(--line);box-shadow:inset 0 -6px 0 var(--vac)}
+.sw.rest{background:repeating-linear-gradient(135deg,var(--s1) 0 2px,var(--s2) 2px 4px);border:1px solid var(--edge)}
+.empty{background:var(--surface);border:1px dashed var(--edge);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:16px}
+
+/* panneau d'ajout */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lbl{font-size:15px;font-weight:700}
+.lbl span{color:var(--ink3);font-weight:500}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--edge);background:var(--surface);font-weight:600;font-size:16px;display:inline-flex;align-items:center;gap:8px;max-width:100%}
+.opt[aria-pressed=true]{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.opt.cab[aria-pressed=true]{background:var(--kbg);color:var(--kfg);border:3px solid var(--kfg);padding:0 12px}
+.opt.cab .chip{height:26px}
+.opt.dash{border-style:dashed;color:var(--ink2)}
+.opt.restopt[aria-pressed=true]{background:repeating-linear-gradient(135deg,var(--s1) 0 5px,var(--s2) 5px 10px);color:var(--ink);border:3px solid var(--ink)}
+.hint{font-size:14px;color:var(--ink3)}
+.selbar{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:10px;margin-top:8px}
+.selbar .seltxt{font-size:15px;color:var(--ink2);padding:0 4px}
+.selbar .seltxt strong{color:var(--ink)}
+.selbar.one{flex-direction:row;align-items:center;justify-content:space-between}
+.selbar.one .btn{height:48px;flex:none}
+
+/* navigation du bas */
+.tabs{display:flex;gap:8px;padding:8px;background:var(--surface);border:1px solid var(--line);border-radius:22px;margin:8px 0}
+.tab{flex:1;height:52px;border:0;border-radius:16px;background:transparent;color:var(--ink2);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
+.tab[aria-current=page]{background:var(--ink);color:var(--onink)}
+
+/* année */
+.yrs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.ym{border:0;background:transparent;padding:4px;border-radius:10px;display:flex;flex-direction:column;gap:6px;text-align:left;min-width:0}
+.ym b{font-size:15px;font-weight:700}
+.ym.cur{background:var(--fill)}
+.mm{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.sq{aspect-ratio:1;border-radius:3px;background:var(--empty)}
+.sq.rest{background:repeating-linear-gradient(135deg,var(--s1) 0 2px,var(--s2) 2px 4px)}
+.sq.today{outline:2px solid var(--ink);outline-offset:0}
+.sq.vac{box-shadow:inset 0 -3px 0 var(--vac)}
+.sq.fer{position:relative}
+.sq.fer::after{content:"";position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--fer)}
+.sq.none{background:transparent}
+
+/* semaine */
+.wrow{display:flex;gap:10px;align-items:center;text-align:left;width:100%;border-radius:16px;padding:10px 12px;min-height:64px;border:1px solid var(--line);background:var(--surface)}
+.wrow.vac{box-shadow:inset 0 -4px 0 var(--vac)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tg{font-size:12.5px;font-weight:700;border-radius:7px;padding:3px 8px;line-height:1.2}
+.tg.f{color:var(--fer);background:var(--ferbg)}
+.tg.v{color:var(--vacfg);background:var(--vacbg)}
+.card.restcard{background:repeating-linear-gradient(135deg,var(--s1) 0 5px,var(--s2) 5px 10px)}
+.wrow.rest{background:repeating-linear-gradient(135deg,var(--s1) 0 5px,var(--s2) 5px 10px);min-height:52px}
+.wd{width:52px;flex:none;text-align:center}
+.w3{font-size:13px;font-weight:600;color:var(--ink2)}
+.wn{font-size:26px;font-weight:700;line-height:1.1;width:40px;height:40px;margin:0 auto;display:grid;place-items:center;border-radius:20px}
+.wrow.today .wn{background:var(--ink);color:var(--onink)}
+.wl{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.wl .ln{display:flex;align-items:center;gap:10px}
+.wl .t1{font-size:17px;font-weight:700;line-height:1.2}
+.wl .t2{font-size:14px;font-weight:500;color:var(--ink2)}
+.wl .none{font-size:16px;color:var(--ink3)}
+.wl .rt{font-size:17px;font-weight:600;color:var(--ink2)}
+.notep{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--ink);background:var(--note);border-radius:10px;padding:6px 10px}
+.notep svg{flex:none}
+
+/* jour */
+.dsum{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.dsum span{font-size:15px;font-weight:600;color:var(--ink2)}
+.dsum strong{font-size:20px;font-weight:700}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card .cap{font-size:14px;font-weight:700;color:var(--ink2);letter-spacing:.3px;text-transform:uppercase}
+.card .who{display:flex;align-items:center;gap:12px}
+.card .who>div{flex:1;min-width:0}
+.card .who b{display:block;font-size:19px;line-height:1.2}
+.card .who small{font-size:15px;font-weight:500;color:var(--ink2)}
+.card.entry{width:100%;text-align:left}
+.card.entry .tap{font-size:14px;font-weight:700;color:var(--sel)}
+.go{color:var(--ink3);flex:none;display:inline-flex}
+h2{font-size:18px;font-weight:700}
+h2 span{font-weight:500;color:var(--ink3);font-size:15px}
+.notes{display:flex;flex-direction:column;gap:8px}
+.nrow{display:flex;align-items:center;gap:10px;background:var(--note);border:0;border-radius:14px;padding:10px 12px 10px 14px;font-size:16px;font-weight:500;text-align:left;width:100%}
+.nrow[aria-pressed=true]{outline:3px solid var(--ink)}
+.nrow>div{flex:1;min-width:0;overflow-wrap:anywhere}
+.nrow small{display:block;font-size:13px;font-weight:700;color:var(--ink2)}
+.nrow>svg{flex:none}
+.field{display:flex;gap:8px}
+.field input{flex:1;min-width:0}
+input[type=text],input[type=email],input[type=password],textarea{height:52px;border-radius:14px;border:1.5px solid var(--edge);background:var(--surface);padding:0 14px;font-size:17px;width:100%}
+input::placeholder{color:var(--ink3)}
+.field .btn{height:52px;border-radius:14px;flex:none;padding:0 16px}
+
+/* activité */
+.tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.tile{grid-column:span 2;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.tile.w3{grid-column:span 3}
+.tile.dark{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.tile b{display:block;font-size:32px;line-height:1.1;font-weight:700;font-variant-numeric:tabular-nums}
+.tile span{font-size:14px;font-weight:500}
+.tile:not(.dark) span{color:var(--ink2)}
+.cabcard{width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.cabcard .top{display:flex;align-items:center;gap:10px}
+.cabcard .top b{flex:1;min-width:0;font-size:18px;overflow-wrap:anywhere}
+.cabcard .top em{font-style:normal;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:4px;background:var(--fill)}
+.bar i{display:block;height:8px;border-radius:4px;background:var(--ksd)}
+.nl{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:15px;font-weight:500;color:var(--ink2)}
+.mrow{display:flex;align-items:center;gap:10px;font-size:15px}
+.mrow span{width:128px;flex:none;color:var(--ink2);font-weight:500}
+.mrow .bar{flex:1}
+.mrow .bar i{background:var(--ink)}
+.mrow b{width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.foot{font-size:13px;color:var(--ink3);text-align:center}
+
+/* fiche d'un cabinet */
+.cabtitle{display:flex;align-items:center;gap:12px}
+.cabtitle .chip{height:44px;min-width:52px;font-size:18px;border-radius:12px}
+.nb{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 14px;min-height:52px}
+.nb>span:first-child{font-weight:700;flex:1;min-width:0}
+.nb small{font-size:14px;color:var(--ink2);font-weight:500}
+.nb b{font-variant-numeric:tabular-nums}
+.drow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-height:56px}
+.drow b{display:block;font-size:16px}
+.drow small{font-size:14px;color:var(--ink2);font-weight:500}
+.drow em{font-style:normal;font-size:14px;font-weight:700;color:var(--kfg);background:var(--kbg);border-radius:8px;padding:3px 9px;white-space:nowrap}
+.dlist{display:flex;flex-direction:column;gap:8px}
+
+/* connexion */
+.login{display:flex;flex-direction:column;gap:18px;padding-top:6vh}
+.logo{width:64px;height:64px;border-radius:20px;background:var(--ink);color:var(--onink);display:grid;place-items:center}
+.login label{font-size:16px;font-weight:600;display:block;margin-bottom:6px}
+.pwf{position:relative}
+.pwf input{padding-right:104px}
+.pwf button{position:absolute;right:6px;top:6px;height:40px;border:0;background:var(--fill);border-radius:10px;padding:0 12px;font-weight:700;font-size:14px}
+.chk{display:flex;align-items:center;gap:12px;font-size:16px;font-weight:600;min-height:44px}
+.chk input{width:26px;height:26px;accent-color:var(--ink)}
+.err{color:var(--danger);font-size:15px;font-weight:600}
+.lnk{border:0;background:transparent;text-decoration:underline;font-weight:600;height:44px;color:var(--ink)}
+
+/* fenêtre du bas, couleurs, message */
+#sheet:empty{display:none}
+.scrim{position:fixed;inset:0;background:rgba(10,12,16,.5);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:480px;max-height:92dvh;overflow-y:auto;background:var(--surface);border-radius:26px 26px 0 0;z-index:21;
+  padding:16px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.sh-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sh-h h2{font-size:23px;letter-spacing:-.2px}
+.sh-h .btn{height:44px;border:0;background:var(--fill);border-radius:22px;padding:0 16px;font-size:16px}
+.sub{font-size:15px;color:var(--ink2);font-weight:500;margin-top:-10px}
+.f{display:flex;flex-direction:column;gap:6px}
+.sws{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.swb{position:relative;width:100%;aspect-ratio:1;border-radius:50%;border:1.5px solid var(--edge);background:var(--kc);color:#fff;display:grid;place-items:center;padding:0;overflow:visible}
+.swb svg{filter:drop-shadow(0 0 2px rgba(0,0,0,.75))}
+.swb[aria-pressed=true],.swb.on{outline:3px solid var(--ink);outline-offset:2px}
+.swb.custom{background:conic-gradient(#e5484d,#f5a524,#e5c400,#5bb318,#00a2c7,#4f46e5,#d6409f,#e5484d);font-weight:700;font-size:20px;text-shadow:0 0 3px rgba(0,0,0,.8)}
+.swb.custom.on{background:var(--kc)}
+.swb input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.codew{display:flex;gap:12px;align-items:flex-end}
+.codew .f{flex:1}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:30;width:calc(100% - 32px);max-width:440px;background:var(--ink);color:var(--onink);border-radius:16px;padding:8px 8px 8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+body.adding .toast{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.toast button{height:40px;border-radius:12px;border:0;background:rgba(127,127,127,.28);color:inherit;font-weight:700;padding:0 14px;flex:none}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+
+<div id="app"><div id="main"></div><div id="bar"></div><nav id="nav" aria-label="Navigation"></nav></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="sheet"></div>
+
+<script>
+(() => {
+'use strict';
+/* ---------- outils ---------- */
+const $ = s => document.querySelector(s);
+const MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const MS = ['Janv.','Févr.','Mars','Avril','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+const DOW = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const DOW3 = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const pad = n => String(n).padStart(2, '0');
+const K = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const P = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const addD = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const dow = d => (d.getDay() + 6) % 7;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const num = n => String(n).replace('.', ',');
+const jours = t => num(t) + ' jour' + (t >= 2 ? 's' : '');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const TODAY = K(new Date());
+const isoWeek = d => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / 864e5 + 1) / 7); };
+const dayLabel = k => { const d = P(k); return DOW[dow(d)] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]; };
+const mabbr = d => MS[d.getMonth()].toLowerCase();
+function fmtRange(a, b) {
+  const da = P(a), db = P(b);
+  if (da.getMonth() === db.getMonth() && da.getFullYear() === db.getFullYear()) return da.getDate() + ' au ' + db.getDate() + ' ' + mabbr(db);
+  return da.getDate() + ' ' + mabbr(da) + ' au ' + db.getDate() + ' ' + mabbr(db);
+}
+function listDates(keys) {
+  const ks = keys.slice().sort(), n = ks.length;
+  if (n > 8) return 'du ' + fmtRange(ks[0], ks[n - 1]) + ' (' + n + ' jours)';
+  const g = {};
+  ks.forEach(k => { const d = P(k), m = d.getFullYear() + '-' + d.getMonth(); (g[m] = g[m] || { d, days: [] }).days.push(d.getDate()); });
+  return Object.values(g).map(x => { const a = x.days; return (a.length > 1 ? a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1] : String(a[0])) + ' ' + mabbr(x.d); }).join(' · ');
+}
+const ic = (p, s = 20, w = 2.4) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const I = {
+  prev: ic('<path d="M15 5l-7 7 7 7"/>', 22), next: ic('<path d="M9 5l7 7-7 7"/>', 22), go: ic('<path d="M9 5l7 7-7 7"/>', 18, 2.4),
+  plus: ic('<path d="M12 5v14M5 12h14"/>', 20, 2.6), x: ic('<path d="M6 6l12 12M18 6L6 18"/>', 18, 2.8),
+  check: ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 18, 3),
+  cal: ic('<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/>', 22, 2.2),
+  chart: ic('<path d="M5 20V11M12 20V4M19 20v-6"/>', 22, 2.2),
+  note: ic('<path d="M6 3.5h9l4 4V20a.5.5 0 01-.5.5H6a.5.5 0 01-.5-.5V4a.5.5 0 01.5-.5z"/><path d="M9 12h6M9 16h4"/>', 18, 2)
+};
+
+/* ---------- couleurs ---------- */
+const PALETTE = [
+  '#E5484D','#F76B15','#F5A524','#E5C400','#5BB318','#12A594','#00A2C7','#3B82F6',
+  '#4F46E5','#8E4EC6','#D6409F','#B42318','#C2410C','#B7791F','#8A7A00','#3F7D20',
+  '#0B7A6C','#0E7490','#1D4ED8','#3730A3','#6B21A8','#9D174D','#7C2D12','#1F2937',
+  '#FF8E8E','#FFB26B','#FFD166','#C5DD6B','#7ED9A0','#6FD3C9','#7CC7EF','#8FB4FF',
+  '#A9A2FF','#C9A5F2','#F1A3D2','#A8A29E','#64748B','#78716C','#334155'];
+const LEGACY = ['#3B82F6', '#F76B15', '#12A594', '#8E4EC6', '#D6409F', '#E5C400'];
+const HEX = /^#[0-9a-f]{6}$/i;
+const col = c => HEX.test(c.color) ? c.color : '#3B82F6';
+const kcs = c => `style="--kc:${col(c)}"`;
+
+/* ---------- données ---------- */
+const LS = 'planning-remplacante-v1', SES = 'planning-remplacante-session';
+const ORDER = { full: 0, am: 1, pm: 2 };
+const SLOT = { full: 'Journée', am: 'Matin', pm: 'Après-midi' };
+const val = e => e.slot === 'full' ? 1 : .5;
+/* repos voulu : 'full' (journée), 'am' (matin) ou 'pm' (après-midi) ; l'ancienne valeur true = journée */
+const restOf = k => { const r = S.rest[k]; return r === true || r === 'full' ? 'full' : r === 'am' || r === 'pm' ? r : null; };
+const rval = r => r === 'full' ? 1 : r ? .5 : 0;
+const restTxt = r => r === 'am' ? 'Repos voulu · matin' : r === 'pm' ? 'Repos voulu · après-midi' : 'Repos voulu';
+const restClash = (k, r) => { const es = S.days[k] || []; return es.length > 0 && (r === 'full' || es.some(e => e.slot === 'full' || e.slot === r)); };
+const entryClash = (k, slot) => { const r = restOf(k); return !!r && (r === 'full' || slot === 'full' || r === slot); };
+const dropRest = (k, slot) => { if (entryClash(k, slot)) { delete S.rest[k]; return true; } return false; };
+
+/* jours fériés (France métropolitaine, calculés à partir de Pâques) */
+const FER = {};
+function feries(y) {
+  if (FER[y]) return FER[y];
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3),
+    h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), kk = c % 4, l = (32 + 2 * e + 2 * i - h - kk) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1;
+  const easter = new Date(y, mo - 1, da), o = {}, put = (dt, n) => { o[K(dt)] = n; };
+  put(new Date(y, 0, 1), "Jour de l'An"); put(addD(easter, 1), 'Lundi de Pâques'); put(new Date(y, 4, 1), 'Fête du Travail'); put(new Date(y, 4, 8), 'Victoire 1945');
+  put(addD(easter, 39), 'Ascension'); put(addD(easter, 50), 'Lundi de Pentecôte'); put(new Date(y, 6, 14), 'Fête nationale'); put(new Date(y, 7, 15), 'Assomption');
+  put(new Date(y, 10, 1), 'Toussaint'); put(new Date(y, 10, 11), 'Armistice 1918'); put(new Date(y, 11, 25), 'Noël');
+  return FER[y] = o;
+}
+const ferie = k => feries(+k.slice(0, 4))[k] || null;
+/* vacances scolaires (Éducation nationale ; la rentrée 2027 n'est pas encore officielle). Dijon = zone A. */
+const VCOM = [['Toussaint', '2025-10-18', '2025-11-02'], ['Noël', '2025-12-20', '2026-01-04'], ["Pont de l'Ascension", '2026-05-14', '2026-05-17'], ['Été', '2026-07-04', '2026-08-31'],
+  ['Toussaint', '2026-10-17', '2026-11-01'], ['Noël', '2026-12-19', '2027-01-03'], ["Pont de l'Ascension", '2027-05-06', '2027-05-09'], ['Été', '2027-07-03', '2027-09-01']];
+const VZ = {
+  A: [['Hiver', '2026-02-07', '2026-02-22'], ['Printemps', '2026-04-04', '2026-04-19'], ['Hiver', '2027-02-13', '2027-02-28'], ['Printemps', '2027-04-10', '2027-04-25']],
+  B: [['Hiver', '2026-02-14', '2026-03-01'], ['Printemps', '2026-04-11', '2026-04-26'], ['Hiver', '2027-02-20', '2027-03-07'], ['Printemps', '2027-04-17', '2027-05-02']],
+  C: [['Hiver', '2026-02-21', '2026-03-08'], ['Printemps', '2026-04-18', '2026-05-03'], ['Hiver', '2027-02-06', '2027-02-21'], ['Printemps', '2027-04-03', '2027-04-18']] };
+const vacOf = k => { if (!VZ[S.zone]) return null; for (const [n, a, b] of VCOM.concat(VZ[S.zone])) if (k >= a && k <= b) return n; return null; };
+const tagsHtml = (k, long) => { const fe = ferie(k), va = vacOf(k); if (!fe && !va) return '';
+  return `<div class="tags">${fe ? `<span class="tg f">${long ? 'Jour férié' : 'Férié'} · ${esc(fe)}</span>` : ''}${va ? `<span class="tg v">${long ? 'Vacances scolaires' : 'Vacances'} · ${esc(va)}${long ? ' (zone ' + S.zone + ')' : ''}</span>` : ''}</div>`; };
+const legendExtra = () => `<span><i class="sw fer"></i>Jour férié</span>${VZ[S.zone] ? `<span><i class="sw vac"></i>Vacances scolaires (zone ${S.zone})</span>` : ''}`;
+
+function emptyData() { return { v: 1, demo: false, zone: 'A', cabs: [], nurses: [], days: {}, rest: {}, notes: [] }; }
+function seed() {
+  const cabs = [
+    { id: 'TI', name: 'Les Tilleuls', code: 'TI', color: '#3B82F6', notes: [] },
+    { id: 'PO', name: 'Cabinet du Pont', code: 'PO', color: '#F76B15', notes: ['Prévoir 20 minutes pour récupérer la clé.'] },
+    { id: 'SR', name: 'Saint-Roch', code: 'SR', color: '#12A594', notes: [] },
+    { id: 'AC', name: 'Les Acacias', code: 'AC', color: '#8E4EC6', notes: [] }];
+  const nurses = [
+    { id: 'n1', name: 'Hélène A.', cab: 'TI', notes: [] }, { id: 'n2', name: 'Isabelle R.', cab: 'TI', notes: [] },
+    { id: 'n3', name: 'Camille P.', cab: 'PO', notes: [] }, { id: 'n4', name: 'Laure V.', cab: 'PO', notes: [] },
+    { id: 'n5', name: 'Anne G.', cab: 'SR', notes: [] }, { id: 'n6', name: 'Sophie C.', cab: 'AC', notes: [] }];
+  const days = {}, rest = {};
+  const add = (k, cab, nurse, slot = 'full') => { (days[k] = days[k] || []).push({ id: uid(), cab, nurse, slot }); };
+  const rng = (a, b, cab, nurse) => { for (let d = a; d <= b; d++) add('2026-11-' + pad(d), cab, nurse); };
+  rng(2, 6, 'TI', 'n1'); rng(9, 13, 'PO', 'n3'); rng(14, 15, 'SR', 'n5'); rng(16, 20, 'TI', 'n2');
+  rng(23, 25, 'AC', 'n6'); add('2026-11-26', 'AC', 'n6', 'am'); add('2026-11-26', 'PO', 'n4', 'pm'); add('2026-11-27', 'PO', 'n4', 'pm'); add('2026-11-30', 'TI', 'n1');
+  [7, 8, 21, 22, 28, 29].forEach(d => { rest['2026-11-' + pad(d)] = 'full'; });
+  rest['2026-11-01'] = 'am'; rest['2026-11-27'] = 'am';
+  const pat = [['TI','TI','TI','TI','TI','R','R'],['PO','PO','PO','SR','SR','SR','R'],['AC','AC','AC','AC','R','R','R'],['TI','TI','PO','PO','PO','R','R'],['SR','SR','SR','SR','SR','PO','PO'],[null,null,null,null,null,'R','R']];
+  const first = { TI: 'n1', PO: 'n3', SR: 'n5', AC: 'n6' }, second = { TI: 'n2', PO: 'n4' };
+  const b0 = new Date(2025, 11, 29);
+  for (let m = 0; m < 12; m++) {
+    if (m === 10) continue;
+    const nd = new Date(2026, m + 1, 0).getDate();
+    for (let d = 1; d <= nd; d++) {
+      const dt = new Date(2026, m, d);
+      const wk = Math.floor(Math.round((dt - b0) / 864e5) / 7);
+      const v = pat[(wk * 3 + Math.floor(wk / 5)) % 6][dow(dt)];
+      const k = K(dt);
+      if (v === 'R') rest[k] = 'full'; else if (v) add(k, v, (wk % 2 && second[v]) || first[v]);
+    }
+  }
+  const notes = [{ id: uid(), date: '2026-11-25', text: 'Dernier jour aux Acacias : rendre la clé du local.' }, { id: uid(), date: '2026-11-26', text: 'Récupérer la clé du local avant 13 h.' }];
+  return { v: 1, demo: true, zone: 'A', cabs, nurses, days, rest, notes };
+}
+function load() {
+  try {
+    const r = localStorage.getItem(LS);
+    if (r) { const o = JSON.parse(r); if (o && o.v === 1) { o.cabs.forEach(c => { if (typeof c.color === 'number') c.color = LEGACY[c.color] || LEGACY[0]; }); o.rest = o.rest || {}; for (const k in o.rest) if (o.rest[k] === true) o.rest[k] = 'full'; if (!o.zone) o.zone = 'A'; return o; } }
+  } catch (e) {}
+  return seed();
+}
+let S = load();
+function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+const C = id => S.cabs.find(c => c.id === id) || { id, name: 'Cabinet supprimé', code: '?', color: '#3B82F6', notes: [] };
+const N = id => S.nurses.find(n => n.id === id);
+const sorted = es => es.slice().sort((a, b) => ORDER[a.slot] - ORDER[b.slot]);
+
+function stats(from, to) {
+  let total = 0, done = 0; const by = {}, months = {};
+  for (const k in S.days) {
+    if (k < from || k > to) continue;
+    for (const e of S.days[k]) {
+      const v = val(e); total += v; if (k <= TODAY) done += v;
+      const c = by[e.cab] || (by[e.cab] = { t: 0, n: {} }); c.t += v;
+      const nk = e.nurse || '-'; c.n[nk] = (c.n[nk] || 0) + v;
+      const mk = k.slice(0, 7); months[mk] = (months[mk] || 0) + v;
+    }
+  }
+  return { total, done, todo: total - done, by, months };
+}
+function restStats(from, to) {
+  let done = 0, todo = 0;
+  for (const k in S.rest) { const r = restOf(k); if (!r || k < from || k > to || restClash(k, r)) continue; if (k <= TODAY) done += rval(r); else todo += rval(r); }
+  return { done, todo };
+}
+const monthRange = d => { const p = d.getFullYear() + '-' + pad(d.getMonth() + 1); return [p + '-01', p + '-31']; };
+const yearRange = d => [d.getFullYear() + '-01-01', d.getFullYear() + '-12-31'];
+
+/* ---------- état de l'écran ---------- */
+let sessionOk = false;
+try { sessionOk = localStorage.getItem(SES) === '1'; } catch (e) {}
+const t0 = new Date();
+const UI = { screen: sessionOk ? 'app' : 'login', tab: 'cal', view: 'month', cur: new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()), period: 'month',
+  back: null, actCab: null, cabPeriod: 'month', cabNurse: 'all',
+  add: null, sel: null, pick: [], sheet: null, toast: null, noteScope: 'day', noteTarget: null, noteDraft: '', rs: true, loginErr: '' };
+
+/* ---------- affichage ---------- */
+function head(title, sub, hide, raw) {
+  return `<header class="head"><button class="iconbtn${hide ? ' ghost' : ''}" data-a="nav" data-v="-1" aria-label="Précédent">${I.prev}</button>
+  <div class="ht"><h1>${title}</h1>${raw || (sub ? `<div class="hs">${sub}</div>` : '')}</div>
+  <button class="iconbtn${hide ? ' ghost' : ''}" data-a="nav" data-v="1" aria-label="Suivant">${I.next}</button></header>`;
+}
+function seg() {
+  const v = [['year', 'Année'], ['month', 'Mois'], ['week', 'Semaine'], ['day', 'Jour']];
+  return `<div class="seg" role="group" aria-label="Type de vue">${v.map(([k, n]) => `<button data-a="view" data-v="${k}" aria-pressed="${UI.view === k}">${n}</button>`).join('')}</div>`;
+}
+function banner() {
+  return S.demo ? `<div class="demo"><span>Données d'exemple</span><button data-a="resetAsk">Repartir de zéro</button></div>` : '';
+}
+function navBtns() {
+  return UI.view === 'day' && UI.back && !UI.add ? `<div class="navbtns"><button class="btn sm" data-a="goBack">${I.prev}Retour</button></div>` : '';
+}
+function chipHtml(e, cls = '') {
+  const c = C(e.cab);
+  return `<span class="chip kc ${cls}" ${kcs(c)}>${esc(c.code)}${e.slot === 'full' ? '' : '<i>½</i>'}</span>`;
+}
+/* listes déroulantes du mois et de l'année */
+function yearList() {
+  let lo = UI.cur.getFullYear() - 3, hi = UI.cur.getFullYear() + 3;
+  const ty = new Date().getFullYear(); lo = Math.min(lo, ty - 3); hi = Math.max(hi, ty + 3);
+  for (const k in S.days) { const y = +k.slice(0, 4); lo = Math.min(lo, y); hi = Math.max(hi, y); }
+  const out = []; for (let y = lo; y <= hi; y++) out.push(y); return out;
+}
+function dd(kind) {
+  if (kind === 'm') return `<span class="dd"><select data-sel="m" aria-label="Choisir le mois">${MONTHS.map((n, i) => `<option value="${i}"${i === UI.cur.getMonth() ? ' selected' : ''}>${cap(n)}</option>`).join('')}</select></span>`;
+  return `<span class="dd"><select data-sel="y" aria-label="Choisir l'année">${yearList().map(y => `<option value="${y}"${y === UI.cur.getFullYear() ? ' selected' : ''}>${y}</option>`).join('')}</select></span>`;
+}
+const pickers2 = p => p === 'month' ? dd('m') + dd('y') : p === 'year' ? dd('y') : '<span class="hs">Depuis le début</span>';
+
+function vMonth() {
+  const y = UI.cur.getFullYear(), m = UI.cur.getMonth();
+  const first = new Date(y, m, 1), lead = dow(first), n = new Date(y, m + 1, 0).getDate();
+  const weeks = Math.ceil((lead + n) / 7);
+  let cells = '';
+  for (let i = 0; i < weeks * 7; i++) {
+    const d = addD(first, i - lead), k = K(d);
+    if (d.getMonth() !== m) { cells += `<div class="cell out" aria-hidden="true"><span class="num">${d.getDate()}</span></div>`; continue; }
+    const es = sorted(S.days[k] || []), r = restOf(k), rest = r === 'full' && !es.length, hr = r && r !== 'full' ? r : null, fe = ferie(k), va = vacOf(k);
+    const chips = es.slice(0, 2).map(e => chipHtml(e)).join('') + (es.length > 2 ? `<span class="more">+${es.length - 2}</span>` : '');
+    const lab = dayLabel(k) + (es.length ? ' : ' + es.map(e => C(e.cab).name + (e.slot === 'full' ? '' : ' ' + SLOT[e.slot].toLowerCase())).join(', ') : r ? '' : ' : vide') + (r ? (es.length ? ', ' : ' : ') + restTxt(r).toLowerCase() : '') + (fe ? ' · jour férié : ' + fe : '') + (va ? ' · vacances scolaires : ' + va : '');
+    const picked = UI.pick.includes(k), isEmpty = !es.length && !r;
+    const cls = 'cell' + (k === TODAY ? ' today' : '') + (rest ? ' rest' : '') + (hr ? ' rest-' + hr : '') + (va ? ' vac' : '') + ((UI.sel && UI.sel.includes(k)) || picked ? ' sel' : '');
+    cells += `<button class="${cls}" data-k="${k}" ${UI.add ? '' : `data-a="cellTap" data-v="${k}"`}${!UI.add && isEmpty ? ` aria-pressed="${picked}"` : ''} aria-label="${esc(lab)}"><span class="num">${d.getDate()}</span>${fe ? '<span class="fer">Férié</span>' : ''}${chips}</button>`;
+  }
+  const [f, t] = monthRange(UI.cur), s = stats(f, t);
+  const summary = `<div class="sum"><strong>${jours(s.total)}</strong><span>${num(s.done)} fait${s.done >= 2 ? 's' : ''} · ${num(s.todo)} prévu${s.todo >= 2 ? 's' : ''}</span></div>`;
+  const legend = `<div class="legend">${S.cabs.map(c => `<span class="kc" ${kcs(c)}><i class="sw"></i>${esc(c.name)}</span>`).join('')}<span><i class="sw rest"></i>Repos voulu</span>${legendExtra()}</div>`;
+  let tail;
+  if (UI.add) tail = vPanel();
+  else if (!S.cabs.length) tail = `<div class="empty"><p><strong>Aucun cabinet pour l'instant.</strong> Créez votre premier cabinet, puis ajoutez vos jours.</p><button class="btn primary" data-a="cabNew">${I.plus}Créer un cabinet</button></div>`;
+  else tail = legend + `<p class="hint">Touchez un jour vide pour le sélectionner (vous pouvez en choisir plusieurs), puis « Ajouter ». Touchez un jour déjà rempli pour le modifier.</p>` + (UI.pick.length ? '' : `<button class="btn primary big" data-a="addStart">${I.plus}Ajouter des jours</button>`);
+  return `${banner()}${head(cap(MONTHS[m]) + ' ' + y)}${UI.add ? '' : seg()}${navBtns()}
+  <div class="dows" aria-hidden="true">${['L','M','M','J','V','S','D'].map(x => `<span>${x}</span>`).join('')}</div>
+  <div id="grid" class="grid${UI.add ? ' adding' : ''}">${cells}</div>${summary}${tail}`;
+}
+
+function pickers(st, t) {
+  const cabs = S.cabs, ns = S.nurses.filter(n => n.cab === st.cab);
+  const rest = (t === 'add' || st.dates) ? `<button class="opt restopt" data-a="pRest" data-t="${t}" aria-pressed="${!!st.rest}">Repos voulu</button>` : '';
+  const cabBtns = cabs.map(c => `<button class="opt cab kc" ${kcs(c)} data-a="pCab" data-t="${t}" data-v="${c.id}" aria-pressed="${st.cab === c.id && !st.rest}"><span class="chip">${esc(c.code)}</span>${esc(c.name)}</button>`).join('');
+  const newCab = t === 'add' ? `<button class="opt dash" data-a="cabNew">${I.plus}Nouveau cabinet</button>` : '';
+  const slots = ['full', 'am', 'pm'].map(s => `<button data-a="pSlot" data-t="${t}" data-v="${s}" aria-pressed="${(st.slot || 'full') === s}">${SLOT[s]}</button>`).join('');
+  if (st.rest) return `<div class="f"><div class="lbl">Cabinet</div><div class="opts">${cabBtns}${rest}${newCab}</div></div>
+    <div class="f"><div class="lbl">Durée du repos</div><div class="seg" role="group" aria-label="Durée du repos">${slots}</div></div>
+    <p class="hint">${t === 'add' ? 'Touchez un jour, ou glissez sur plusieurs jours, pour marquer les jours où vous ne voulez pas travailler. Refaites-le pour les retirer.' : 'Ces jours seront marqués « repos voulu ».'}</p>`;
+  const nBtns = st.cab ? ns.map(n => `<button class="opt" data-a="pNurse" data-t="${t}" data-v="${n.id}" aria-pressed="${st.nurse === n.id}">${esc(n.name)}</button>`).join('') : '';
+  const noN = '<span class="hint">Aucune infirmière dans ce cabinet. Ajoutez-en dans Mon activité, en modifiant le cabinet.</span>';
+  return `<div class="f"><div class="lbl">1 · Cabinet</div><div class="opts">${cabBtns || '<span class="hint">Aucun cabinet. Créez-en un.</span>'}${rest}${newCab}</div></div>
+  <div class="f"><div class="lbl">2 · Infirmière remplacée</div><div class="opts">${st.cab ? (nBtns || noN) : '<span class="hint">Choisissez d\'abord un cabinet.</span>'}</div></div>
+  <div class="f"><div class="lbl">3 · Durée</div><div class="seg" role="group" aria-label="Durée">${slots}</div></div>`;
+}
+function vPanel() {
+  return `<section class="panel" aria-label="Ajouter des jours">${pickers(UI.add, 'add')}
+  ${UI.add.rest ? '' : '<p class="hint">Touchez un jour pour l\'ajouter, ou glissez le doigt sur plusieurs jours puis validez.</p>'}</section>`;
+}
+
+function vYear() {
+  const y = UI.cur.getFullYear();
+  const months = MS.map((name, m) => {
+    const lead = dow(new Date(y, m, 1)), n = new Date(y, m + 1, 0).getDate();
+    let sq = '<i class="sq none"></i>'.repeat(lead);
+    for (let d = 1; d <= n; d++) {
+      const k = y + '-' + pad(m + 1) + '-' + pad(d), es = sorted(S.days[k] || []);
+      let st = '', cl = 'sq';
+      if (es.length) {
+        const c1 = col(C(es[0].cab));
+        if (es.length > 1) st = `background:linear-gradient(135deg,${c1} 50%,${col(C(es[1].cab))} 50%)`;
+        else if (es[0].slot !== 'full') st = `background:linear-gradient(135deg,${c1} 50%,var(--empty) 50%)`;
+        else st = `background:${c1}`;
+      } else if (restOf(k) === 'full') cl += ' rest';
+      else if (restOf(k)) st = 'background:linear-gradient(135deg,var(--s1) 50%,var(--empty) 50%)';
+      if (k === TODAY) cl += ' today';
+      if (vacOf(k)) cl += ' vac';
+      if (ferie(k)) cl += ' fer';
+      sq += `<i class="${cl}" style="${st}"></i>`;
+    }
+    const isNow = y === new Date().getFullYear() && m === new Date().getMonth();
+    return `<button class="ym${isNow ? ' cur' : ''}" data-a="openMonth" data-v="${m}" aria-label="Ouvrir ${MONTHS[m]} ${y}"><b>${name}</b><span class="mm">${sq}</span></button>`;
+  }).join('');
+  const [f, t] = yearRange(UI.cur), s = stats(f, t);
+  const legend = `<div class="legend">${S.cabs.map(c => `<span class="kc" ${kcs(c)}><i class="sw"></i>${esc(c.name)}</span>`).join('')}<span><i class="sw rest"></i>Repos voulu</span>${legendExtra()}</div>`;
+  return `${banner()}${head(String(y))}${seg()}${navBtns()}<div class="yrs">${months}</div>
+  <div class="sum"><strong>${jours(s.total)}</strong><span>en ${y}</span></div>${legend}
+  <p class="hint">Touchez un mois pour l'ouvrir et modifier vos jours.</p>`;
+}
+
+function vWeek() {
+  const mon = addD(UI.cur, -dow(UI.cur)), sun = addD(mon, 6);
+  const sub = mon.getMonth() === sun.getMonth() ? `${mon.getDate()} – ${sun.getDate()} ${MONTHS[sun.getMonth()]} ${sun.getFullYear()}` : `${mon.getDate()} ${mabbr(mon)} – ${sun.getDate()} ${mabbr(sun)} ${sun.getFullYear()}`;
+  let total = 0;
+  const rows = [0, 1, 2, 3, 4, 5, 6].map(i => {
+    const d = addD(mon, i), k = K(d), es = sorted(S.days[k] || []);
+    es.forEach(e => { total += val(e); });
+    const r = restOf(k), full = r === 'full' && !es.length, fe = ferie(k), va = vacOf(k);
+    const lines = es.map(e => { const c = C(e.cab), nu = e.nurse && N(e.nurse);
+      const sub2 = e.slot === 'full' ? ((nu ? esc(nu.name) + ' · ' : '') + 'journée') : (SLOT[e.slot] + (nu ? ' · ' + esc(nu.name) : ''));
+      return `<div class="ln">${chipHtml(e, 'lg')}<div style="min-width:0"><div class="t1">${esc(c.name)}</div><div class="t2">${sub2}</div></div></div>`; }).join('');
+    const notes = (S.notes.filter(x => x.date === k)).map(x => `<div class="notep">${I.note}<span>${esc(x.text)}</span></div>`).join('');
+    const restLine = r && !(r === 'full' && es.length) ? `<div class="rt">${restTxt(r)}</div>` : '';
+    const body = (r === 'am' ? restLine + lines : lines + restLine) || '<div class="none">Rien de prévu</div>';
+    return `<button class="wrow${full ? ' rest' : ''}${va ? ' vac' : ''}${k === TODAY ? ' today' : ''}" data-a="openDay" data-v="${k}"><div class="wd"><div class="w3">${DOW3[i]}</div><div class="wn">${d.getDate()}</div></div><div class="wl">${tagsHtml(k)}${body}${notes}</div></button>`;
+  }).join('');
+  return `${banner()}${head('Semaine ' + isoWeek(mon), sub)}${seg()}${navBtns()}<div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
+  <div class="sum"><span>Cette semaine</span><strong>${jours(total)}</strong></div>`;
+}
+
+function dayNotes(k, es) {
+  const out = [];
+  S.notes.filter(x => x.date === k).forEach(x => out.push({ w: 'day', id: x.id, i: 0, who: 'Ce jour', text: x.text }));
+  [...new Set(es.map(e => e.cab))].forEach(id => C(id).notes.forEach((t, i) => out.push({ w: 'cab', id, i, who: C(id).name, text: t })));
+  [...new Set(es.map(e => e.nurse).filter(Boolean))].forEach(id => { const nu = N(id); if (nu) nu.notes.forEach((t, i) => out.push({ w: 'nurse', id, i, who: nu.name, text: t })); });
+  return out;
+}
+function vDay() {
+  const k = K(UI.cur), d = UI.cur, es = sorted(S.days[k] || []), r = restOf(k);
+  const tot = es.reduce((a, e) => a + val(e), 0);
+  const sumR = !es.length ? (r ? restTxt(r) : 'Aucun cabinet') : jours(tot) + (es.length > 1 ? ' (' + es.map(e => num(val(e))).join(' + ') + ')' : '');
+  const nc = new Set(es.map(e => e.cab)).size;
+  const sumL = nc ? nc + ' cabinet' + (nc > 1 ? 's' : '') + ' ce jour-là' : 'Ce jour-là';
+  const cards = es.map(e => { const c = C(e.cab), nu = e.nurse && N(e.nurse);
+    return `<button class="card entry kc" ${kcs(c)} data-a="entryEdit" data-v="${e.id}"><div class="cap">${e.slot === 'full' ? 'Journée · 1 jour' : (SLOT[e.slot] + ' · 0,5 jour')}</div>
+    <div class="who">${chipHtml(e, 'xl')}<div><b>${esc(c.name)}</b><small>${nu ? 'Remplace ' + esc(nu.name) : 'Sans infirmière indiquée'}</small></div><span class="go">${I.go}</span></div>
+    <span class="tap">Toucher pour modifier ou supprimer</span></button>`; }).join('');
+  const restCard = r ? `<button class="card entry restcard" data-a="restEdit"><div class="cap">${r === 'full' ? 'Journée · repos voulu' : SLOT[r] + ' · ½ journée de repos'}</div><div class="who"><div><b>Repos voulu</b><small>Vous ne souhaitez pas travailler</small></div><span class="go">${I.go}</span></div><span class="tap">Toucher pour modifier ou supprimer</span></button>` : '';
+  const list = dayNotes(k, es);
+  const nl = list.map(n => `<button class="nrow" data-a="noteOpen" data-w="${n.w}" data-id="${n.id}" data-i="${n.i}">${I.note}<div><small>${esc(n.who)}</small>${esc(n.text)}</div><span class="go">${I.go}</span></button>`).join('');
+  const sc = UI.noteScope;
+  let targets = '';
+  if (sc === 'cab') targets = `<div class="opts">${S.cabs.map(c => `<button class="opt cab kc" ${kcs(c)} data-a="noteTarget" data-v="${c.id}" aria-pressed="${UI.noteTarget === c.id}"><span class="chip">${esc(c.code)}</span>${esc(c.name)}</button>`).join('') || '<span class="hint">Aucun cabinet.</span>'}</div>`;
+  if (sc === 'nurse') targets = `<div class="opts">${S.nurses.map(n => `<button class="opt" data-a="noteTarget" data-v="${n.id}" aria-pressed="${UI.noteTarget === n.id}">${esc(n.name)}</button>`).join('') || '<span class="hint">Aucune infirmière.</span>'}</div>`;
+  const scopes = [['day', 'Ce jour'], ['cab', 'Un cabinet'], ['nurse', 'Une infirmière']].map(([v, n]) => `<button class="opt" data-a="noteScope" data-v="${v}" aria-pressed="${sc === v}" style="height:40px;font-size:15px">${n}</button>`).join('');
+  return `${banner()}${head(dayLabel(k), d.getFullYear() + ' · semaine ' + isoWeek(d))}${seg()}${navBtns()}${tagsHtml(k, true)}
+  <div class="dsum"><span>${sumL}</span><strong>${sumR}</strong></div>
+  ${r === 'am' ? restCard : ''}${cards}${r && r !== 'am' ? restCard : ''}
+  <div class="row"><button class="btn" data-a="entryNew" style="font-size:15px">${I.plus}Ajouter un cabinet</button>${r ? '' : '<button class="btn" data-a="restNew">Repos voulu</button>'}</div>
+  <h2>Pense-bêtes</h2>
+  <div class="notes">${nl || '<p class="hint">Aucun pense-bête pour ce jour.</p>'}</div>
+  <div class="f"><div class="lbl">Rattacher à</div><div class="opts">${scopes}</div></div>${targets}
+  <div class="field"><label for="noteIn" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Nouveau pense-bête</label><input id="noteIn" type="text" data-o="ui" data-f="noteDraft" data-enter="noteAdd" placeholder="Écrire un pense-bête…" value="${esc(UI.noteDraft)}" autocomplete="off"><button class="btn primary" data-a="noteAdd">Ajouter</button></div>
+  <p class="hint">Ne notez ni nom de patient ni information de santé.</p>`;
+}
+
+function vAct() {
+  if (UI.actCab) return vCab();
+  const p = UI.period, c = UI.cur;
+  const [f, t] = p === 'month' ? monthRange(c) : p === 'year' ? yearRange(c) : ['0000-01-01', '9999-12-31'];
+  const s = stats(f, t), r = restStats(f, t);
+  const per = [['month', 'Ce mois'], ['year', 'Cette année'], ['all', 'Tout']].map(([k, n]) => `<button data-a="period" data-v="${k}" aria-pressed="${p === k}">${n}</button>`).join('');
+  const max = Math.max(1, ...S.cabs.map(cb => (s.by[cb.id] || { t: 0 }).t));
+  const cards = S.cabs.map(cb => { const b = s.by[cb.id] || { t: 0, n: {} };
+    const nl = Object.keys(b.n).map(id => `<span>${id === '-' ? 'Sans infirmière' : esc((N(id) || { name: 'Infirmière supprimée' }).name)} · ${num(b.n[id])} j</span>`).join('');
+    return `<button class="cabcard kc" ${kcs(cb)} data-a="cabOpen" data-v="${cb.id}" aria-label="Voir le détail de ${esc(cb.name)}"><div class="top"><span class="chip lg">${esc(cb.code)}</span><b>${esc(cb.name)}</b><em>${num(b.t)} j</em><span class="go">${I.go}</span></div>
+    <div class="bar"><i style="width:${Math.round(b.t / max * 100)}%"></i></div>${nl ? `<div class="nl">${nl}</div>` : '<div class="nl"><span>Aucun jour sur cette période</span></div>'}
+    ${cb.notes.length ? `<div class="notep">${I.note}<span>${esc(cb.notes[0])}${cb.notes.length > 1 ? ' (+' + (cb.notes.length - 1) + ')' : ''}</span></div>` : ''}</button>`; }).join('');
+  const mk = Object.keys(s.months).sort();
+  const mmax = Math.max(1, ...mk.map(x => s.months[x]));
+  const byM = p !== 'month' && mk.length ? `<h2>Par mois</h2><div style="display:flex;flex-direction:column;gap:8px">${mk.map(x => { const [yy, mm] = x.split('-'); return `<div class="mrow"><span>${cap(MONTHS[+mm - 1])} ${yy}</span><div class="bar"><i style="width:${Math.round(s.months[x] / mmax * 100)}%"></i></div><b>${num(s.months[x])} j</b></div>`; }).join('')}</div>` : '';
+  return `${banner()}${head('Mon activité', '', p === 'all', `<div class="pk">${pickers2(p)}</div>`)}<div class="seg" role="group" aria-label="Période">${per}</div>
+  <div class="tiles"><div class="tile dark"><b>${num(s.total)}</b><span>jours au total</span></div><div class="tile"><b>${num(s.done)}</b><span>jours faits</span></div><div class="tile"><b>${num(s.todo)}</b><span>jours prévus</span></div>
+  <div class="tile w3"><b>${num(r.done)}</b><span>repos faits</span></div><div class="tile w3"><b>${num(r.todo)}</b><span>repos prévus</span></div></div>
+  <h2>Par cabinet</h2>
+  ${cards || '<div class="empty"><p>Aucun cabinet. Ajoutez le premier avec le bouton « Un cabinet ».</p></div>'}
+  <button class="btn primary" data-a="cabNew">${I.plus}Un cabinet</button>
+  ${byM}<button class="btn text" data-a="settings">Réglages</button><p class="foot">Prototype cliquable. Vos données restent sur cet appareil.</p>`;
+}
+
+function vCab() {
+  const cb = S.cabs.find(c => c.id === UI.actCab);
+  if (!cb) { UI.actCab = null; return vAct(); }
+  const p = UI.cabPeriod, [f, t] = p === 'month' ? monthRange(UI.cur) : yearRange(UI.cur);
+  const ns = S.nurses.filter(n => n.cab === cb.id);
+  const all = [];
+  for (const k in S.days) if (k >= f && k <= t) S.days[k].forEach(e => { if (e.cab === cb.id) all.push({ k, e }); });
+  const orphan = all.some(r => !r.e.nurse);
+  let flt = UI.cabNurse;
+  if (flt === '-' ? !orphan : (flt !== 'all' && !ns.some(n => n.id === flt))) flt = 'all';
+  UI.cabNurse = flt;
+  const rows = all.filter(r => flt === 'all' || (flt === '-' ? !r.e.nurse : r.e.nurse === flt))
+    .sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : ORDER[a.e.slot] - ORDER[b.e.slot]);
+  const done = rows.filter(r => r.k <= TODAY).reverse(), todo = rows.filter(r => r.k > TODAY);
+  const sum = a => a.reduce((s, r) => s + val(r.e), 0);
+  const sd = sum(done), st = sum(todo);
+  const row = r => { const d = P(r.k), nu = r.e.nurse && N(r.e.nurse);
+    return `<button class="drow" data-a="openDay" data-v="${r.k}"><div><b>${DOW3[dow(d)]} ${d.getDate()} ${mabbr(d)}${p === 'year' ? ' ' + d.getFullYear() : ''}</b><small>${nu ? esc(nu.name) : 'Sans infirmière indiquée'}</small></div><em>${r.e.slot === 'full' ? 'Journée' : SLOT[r.e.slot] + ' · ½'}</em></button>`; };
+  const nOpts = [['all', 'Toutes']].concat(ns.map(n => [n.id, n.name])).concat(orphan ? [['-', 'Sans infirmière']] : [])
+    .map(([id, name]) => `<button class="opt" data-a="cabNurse" data-v="${id}" aria-pressed="${flt === id}">${esc(name)}</button>`).join('');
+  let byN = '';
+  if (flt === 'all' && all.length && (ns.length > 1 || orphan)) {
+    const ids = ns.map(n => n.id).concat(orphan ? ['-'] : []);
+    byN = `<h2>Par infirmière</h2><div class="dlist">${ids.map(id => {
+      const rr = all.filter(r => id === '-' ? !r.e.nurse : r.e.nurse === id);
+      const dn = sum(rr.filter(r => r.k <= TODAY)), tn = sum(rr.filter(r => r.k > TODAY));
+      return `<button class="nb" data-a="cabNurse" data-v="${id}"><span>${id === '-' ? 'Sans infirmière' : esc(N(id).name)}</span><small>${num(dn)} fait${dn >= 2 ? 's' : ''} · ${num(tn)} prévu${tn >= 2 ? 's' : ''}</small><b>${num(dn + tn)} j</b><span class="go">${I.go}</span></button>`;
+    }).join('')}</div>`;
+  }
+  const per = [['month', 'Mois'], ['year', 'Année']].map(([k, n]) => `<button data-a="cabPeriod" data-v="${k}" aria-pressed="${p === k}">${n}</button>`).join('');
+  const lists = `<div class="dlist kc" ${kcs(cb)}>`;
+  return `${banner()}
+  <div class="head"><button class="btn" data-a="cabBack" style="height:44px;border-width:1.5px;padding:0 14px 0 8px">${I.prev}Mon activité</button><button class="btn primary" data-a="cabEdit" data-v="${cb.id}" style="height:44px;padding:0 20px">Modifier</button></div>
+  <div class="cabtitle kc" ${kcs(cb)}><span class="chip">${esc(cb.code)}</span><h1>${esc(cb.name)}</h1></div>
+  <div class="seg" role="group" aria-label="Période">${per}</div>
+  <div class="navrow"><button class="iconbtn" data-a="nav" data-v="-1" aria-label="Précédent">${I.prev}</button><div class="pk">${pickers2(p)}</div><button class="iconbtn" data-a="nav" data-v="1" aria-label="Suivant">${I.next}</button></div>
+  ${ns.length || orphan ? `<div class="f"><div class="lbl">Voir par infirmière</div><div class="opts">${nOpts}</div></div>` : ''}
+  <div class="tiles"><div class="tile dark"><b>${num(sd + st)}</b><span>jours au total</span></div><div class="tile"><b>${num(sd)}</b><span>jours faits</span></div><div class="tile"><b>${num(st)}</b><span>jours prévus</span></div></div>
+  ${byN}
+  <h2>Jours faits <span>(${num(sd)})</span></h2>
+  ${lists}${done.length ? done.map(row).join('') : '<p class="hint">Aucun jour fait sur cette période.</p>'}</div>
+  <h2>Jours prévus <span>(${num(st)})</span></h2>
+  ${lists}${todo.length ? todo.map(row).join('') : '<p class="hint">Aucun jour prévu sur cette période.</p>'}</div>`;
+}
+
+function vLogin() {
+  return `<form class="login" id="loginForm" novalidate>
+  <div class="logo">${ic('<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14.5h3"/>', 32, 2)}</div>
+  <div><h1>Mon planning</h1><p class="hs" style="margin-top:4px">Vos jours de remplacement, partout avec vous.</p></div>
+  <div><label for="email">Adresse e-mail</label><input id="email" type="email" inputmode="email" autocomplete="username" placeholder="prenom.nom@exemple.fr"></div>
+  <div><label for="pw">Mot de passe</label><div class="pwf"><input id="pw" type="password" autocomplete="current-password"><button type="button" data-a="pwShow">Afficher</button></div></div>
+  <label class="chk"><input type="checkbox" id="remember" checked>Rester connectée</label>
+  <p class="err" id="loginErr" role="alert">${esc(UI.loginErr)}</p>
+  <button class="btn primary big" type="submit">Se connecter</button>
+  <button class="lnk" type="button" data-a="forgot">Mot de passe oublié ?</button>
+  <p class="hint">Votre compte est déjà créé pour vous. Dans ce prototype, n'importe quelle adresse e-mail et n'importe quel mot de passe fonctionnent.</p></form>`;
+}
+
+function drawNav() {
+  const n = $('#nav');
+  if (UI.screen !== 'app' || UI.add || UI.pick.length) { n.innerHTML = ''; return; }
+  n.innerHTML = `<div class="tabs"><button class="tab" data-a="tab" data-v="cal" ${UI.tab === 'cal' ? 'aria-current="page"' : ''}>${I.cal}Calendrier</button><button class="tab" data-a="tab" data-v="act" ${UI.tab === 'act' ? 'aria-current="page"' : ''}>${I.chart}Mon activité</button></div>`;
+}
+function selLabel() {
+  const A = UI.add; if (A.rest) return restTxt(A.slot || 'full');
+  const nu = A.nurse && N(A.nurse);
+  return (A.cab ? esc(C(A.cab).name) : 'Cabinet à choisir') + (nu ? ' · ' + esc(nu.name) : '');
+}
+function drawBar() {
+  const b = $('#bar');
+  if (UI.screen === 'app' && UI.tab === 'cal' && UI.view === 'month' && !UI.add && UI.pick.length) {
+    const n = UI.pick.length;
+    b.innerHTML = `<div class="selbar"><div class="seltxt"><strong>${n} jour${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}</strong> · ${listDates(UI.pick)}</div><div class="row"><button class="btn" data-a="pickCancel">Annuler</button><button class="btn primary" data-a="pickAdd">Ajouter</button></div></div>`;
+    return;
+  }
+  if (UI.screen !== 'app' || UI.tab !== 'cal' || !UI.add) { b.innerHTML = ''; return; }
+  if (UI.sel) {
+    const ks = UI.sel, allRest = UI.add.rest && ks.every(k => restOf(k) === (UI.add.slot || 'full'));
+    b.innerHTML = `<div class="selbar"><div class="seltxt"><strong>${ks.length} jour${ks.length > 1 ? 's' : ''}</strong> · ${allRest ? 'Retirer le repos' : selLabel()} · ${fmtRange(ks[0], ks[ks.length - 1])}</div>
+    <div class="row"><button class="btn" data-a="selCancel">Annuler</button><button class="btn primary" data-a="selOk">Valider</button></div></div>`;
+  } else b.innerHTML = `<div class="selbar one"><div class="seltxt">${UI.add.rest || UI.add.cab ? selLabel() : 'Choisissez un cabinet'}</div><button class="btn primary" data-a="addEnd">Terminer</button></div>`;
+}
+function drawToast() {
+  const t = UI.toast;
+  $('#toast').innerHTML = t ? `<div class="toast"><span>${esc(t.msg)}</span>${t.snap ? '<button data-a="undo">Annuler</button>' : ''}</div>` : '';
+}
+function toast(msg, snap) {
+  clearTimeout(UI.tt); UI.toast = { msg, snap: snap || null }; drawToast();
+  UI.tt = setTimeout(() => { UI.toast = null; drawToast(); }, 6000);
+}
+const snap = () => JSON.stringify({ days: S.days, rest: S.rest, notes: S.notes, cabs: S.cabs, nurses: S.nurses });
+
+/* ---------- fenêtres ---------- */
+function autoCode(name) {
+  const stop = new Set(['cabinet', 'des', 'du', 'de', 'la', 'les', 'le', 'l', 'd', 'et', 'infirmier', 'infirmiers', 'infirmière', 'infirmières']);
+  const w = name.toLowerCase().split(/[^a-zàâäçéèêëîïôöùûüÿ]+/i).filter(x => x && !stop.has(x));
+  const z = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  if (!w.length) return '';
+  return z(w.length === 1 ? w[0].slice(0, 2) : w[0][0] + w[1][0]);
+}
+function swatches(sel) {
+  const low = String(sel).toLowerCase(), inPal = PALETTE.some(c => c.toLowerCase() === low);
+  const btns = PALETTE.map((c, i) => { const on = low === c.toLowerCase(); return `<button class="swb" style="--kc:${c}" data-a="shColor" data-v="${c}" aria-label="Couleur ${i + 1}" aria-pressed="${on}">${on ? I.check : ''}</button>`; }).join('');
+  const custom = `<label class="swb custom${inPal ? '' : ' on'}" ${inPal ? '' : `style="--kc:${sel}"`} aria-label="Choisir une autre couleur"><input type="color" id="shColorIn" value="${HEX.test(sel) ? sel : '#3b82f6'}">${inPal ? '+' : I.check}</label>`;
+  return btns + custom;
+}
+function shHead(t) { return `<div class="sh-h"><h2>${t}</h2><button class="btn" data-a="shClose">${I.x}Fermer</button></div>`; }
+/* suppression en trois temps : bouton, puis confirmation */
+function delBlock(sh, label, text, yes) {
+  return sh.confirmDel
+    ? `<div class="card"><p><strong>${text}</strong></p><div class="row"><button class="btn" data-a="shDelNo">Non, garder</button><button class="btn danger primary" data-a="${yes}">Supprimer</button></div></div>`
+    : `<button class="btn text danger" data-a="shDelAsk">${label}</button>`;
+}
+function nurseDays(id) { let n = 0; for (const k in S.days) n += S.days[k].filter(e => e.nurse === id).length; return n; }
+function pickCard(sh) {
+  const p = sh.pick; if (!p) return '';
+  if (p.kind === 'nurse') {
+    const nu = sh.nurses.find(n => n.id === p.id); if (!nu) return '';
+    if (sh.confirmPick) { const d = nurseDays(nu.id); return `<div class="card"><p><strong>Supprimer ${esc(nu.name)} ?</strong> ${d ? `Ses ${d} jour${d > 1 ? 's' : ''} resteront dans le planning, sans infirmière indiquée.` : 'Elle n\'a aucun jour dans le planning.'}</p><div class="row"><button class="btn" data-a="shPickNo">Non, garder</button><button class="btn danger primary" data-a="shPickYes">Supprimer</button></div></div>`; }
+    return `<div class="card"><label class="lbl" for="shPickName">Prénom de l'infirmière</label><div class="field"><input id="shPickName" type="text" data-o="sheet" data-f="pickName" data-enter="shRename" value="${esc(sh.pickName)}" autocomplete="off"><button class="btn" data-a="shRename">Renommer</button></div>
+    <button class="btn text danger" data-a="shPickAsk">Supprimer l'infirmière</button></div>`;
+  }
+  const tx = sh.notes[p.i]; if (tx === undefined) return '';
+  if (sh.confirmPick) return `<div class="card"><p><strong>Supprimer ce pense-bête ?</strong></p><div class="row"><button class="btn" data-a="shPickNo">Non, garder</button><button class="btn danger primary" data-a="shPickYes">Supprimer</button></div></div>`;
+  return `<div class="card"><p>${esc(tx)}</p><button class="btn text danger" data-a="shPickAsk">Supprimer le pense-bête</button></div>`;
+}
+function shCab(sh) {
+  const code = sh.code || autoCode(sh.name);
+  const pk = sh.pick || {};
+  const ns = sh.nurses.map(n => `<button class="opt" data-a="shPickNurse" data-v="${n.id}" aria-pressed="${pk.kind === 'nurse' && pk.id === n.id}">${esc(n.name)}</button>`).join('');
+  const nt = sh.notes.map((t, i) => `<button class="nrow" data-a="shPickNote" data-v="${i}" aria-pressed="${pk.kind === 'note' && pk.i === i}">${I.note}<div>${esc(t)}</div><span class="go">${I.go}</span></button>`).join('');
+  let dayCount = 0; if (sh.id) for (const k in S.days) dayCount += S.days[k].filter(e => e.cab === sh.id).length;
+  const del = !sh.id ? '' : delBlock(sh, 'Supprimer le cabinet', `Supprimer ce cabinet ? ${dayCount ? `Ses ${dayCount} jour${dayCount > 1 ? 's' : ''} seront aussi retirés du planning.` : 'Il n\'a aucun jour dans le planning.'}`, 'shDelYes');
+  return `${shHead(sh.id ? 'Modifier le cabinet' : 'Nouveau cabinet')}
+  <div class="f"><label class="lbl" for="shName">Nom du cabinet</label><input id="shName" type="text" data-o="sheet" data-f="name" value="${esc(sh.name)}" placeholder="Par exemple : Cabinet des Lilas" autocomplete="off"></div>
+  <div class="codew"><div class="f"><label class="lbl" for="shCode">Initiales (2 lettres)</label><input id="shCode" type="text" maxlength="3" data-o="sheet" data-f="code" value="${esc(code)}" style="text-transform:uppercase;font-weight:700" autocomplete="off"></div>
+  <span class="chip xl kc" id="shPrev" style="--kc:${esc(sh.color)};height:56px;min-width:84px;border-radius:14px;font-size:18px">${esc((code || '?').toUpperCase())}</span></div>
+  <div class="f"><div class="lbl">Couleur</div><div class="sws" id="shSws">${swatches(sh.color)}</div></div>
+  <div class="f"><div class="lbl">Infirmières remplacées dans ce cabinet</div>${ns ? `<div class="opts">${ns}</div>` : '<p class="hint">Aucune infirmière pour l\'instant.</p>'}
+  ${pk.kind === 'nurse' ? pickCard(sh) : ''}
+  <div class="field"><label for="shNurse" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Ajouter une infirmière</label><input id="shNurse" type="text" data-o="sheet" data-f="nurseDraft" data-enter="shNurseAdd" placeholder="Prénom et initiale du nom" value="${esc(sh.nurseDraft)}" autocomplete="off"><button class="btn primary" data-a="shNurseAdd">Ajouter</button></div>
+  <p class="hint">Touchez une infirmière pour la renommer ou la supprimer.</p></div>
+  <div class="f"><div class="lbl">Pense-bêtes du cabinet <span>(facultatif)</span></div>${nt ? `<div class="notes">${nt}</div>` : ''}
+  ${pk.kind === 'note' ? pickCard(sh) : ''}
+  <div class="field"><label for="shNote" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Nouveau pense-bête</label><input id="shNote" type="text" data-o="sheet" data-f="noteDraft" data-enter="shNoteAdd" placeholder="Par exemple : clé à récupérer" value="${esc(sh.noteDraft)}" autocomplete="off"><button class="btn" data-a="shNoteAdd">Ajouter</button></div>
+  <p class="hint">Ne notez ni nom de patient ni information de santé.</p></div>
+  ${sh.err ? `<p class="err" role="alert">${esc(sh.err)}</p>` : ''}
+  <div style="display:flex;flex-direction:column;gap:8px"><button class="btn primary big" data-a="shCabSave">Enregistrer le cabinet</button><button class="btn text" data-a="shClose">Annuler</button>${del}</div>`;
+}
+function shEntry(sh) {
+  if (!S.cabs.length) return `${shHead('Ajouter un cabinet')}<p>Aucun cabinet pour l'instant. Créez-en un dans « Mon activité ».</p><button class="btn primary big" data-a="cabNew">Créer un cabinet</button>`;
+  const multi = !!sh.dates, n = multi ? sh.dates.length : 0, c = sh.id && C(sh.cab);
+  const del = sh.id ? delBlock(sh, 'Supprimer ce jour', `Supprimer ${esc(c.name)} le ${dayLabel(sh.date).toLowerCase()} ?`, 'shEntryDel') : '';
+  return `${shHead(multi ? 'Ajouter ' + n + ' jour' + (n > 1 ? 's' : '') : sh.id ? 'Modifier ce jour' : 'Ajouter un cabinet')}<p class="sub">${multi ? cap(listDates(sh.dates)) : dayLabel(sh.date)}</p>${pickers(sh, 'sheet')}
+  ${sh.err ? `<p class="err" role="alert">${esc(sh.err)}</p>` : ''}
+  <div style="display:flex;flex-direction:column;gap:8px"><button class="btn primary big" data-a="shEntrySave">${multi ? 'Ajouter' : 'Enregistrer'}</button><button class="btn text" data-a="shClose">Annuler</button>${del}</div>`;
+}
+function shRest(sh) {
+  const slots = ['full', 'am', 'pm'].map(x => `<button data-a="pSlot" data-t="sheet" data-v="${x}" aria-pressed="${sh.slot === x}">${SLOT[x]}</button>`).join('');
+  const del = sh.editing ? delBlock(sh, 'Supprimer ce repos', `Supprimer le repos voulu du ${dayLabel(sh.date).toLowerCase()} ?`, 'shRestDel') : '';
+  return `${shHead(sh.editing ? 'Modifier le repos' : 'Repos voulu')}<p class="sub">${dayLabel(sh.date)}</p>
+  <div class="f"><div class="lbl">Durée</div><div class="seg" role="group" aria-label="Durée">${slots}</div></div>
+  <p class="hint">Journée = 1 jour de repos. Matin ou après-midi = ½ jour.</p>
+  ${sh.err ? `<p class="err" role="alert">${esc(sh.err)}</p>` : ''}
+  <div style="display:flex;flex-direction:column;gap:8px"><button class="btn primary big" data-a="shRestSave">Enregistrer</button><button class="btn text" data-a="shClose">Annuler</button>${del}</div>`;
+}
+function shNote(sh) {
+  return `${shHead('Pense-bête')}<p class="sub">${esc(sh.who)}</p>
+  <div class="f"><label class="lbl" for="shNoteTxt">Texte</label><input id="shNoteTxt" type="text" data-o="sheet" data-f="text" data-enter="shNoteSave" value="${esc(sh.text)}" autocomplete="off"><p class="hint">Ne notez ni nom de patient ni information de santé.</p></div>
+  ${sh.err ? `<p class="err" role="alert">${esc(sh.err)}</p>` : ''}
+  <div style="display:flex;flex-direction:column;gap:8px"><button class="btn primary big" data-a="shNoteSave">Enregistrer</button><button class="btn text" data-a="shClose">Annuler</button>${delBlock(sh, 'Supprimer le pense-bête', 'Supprimer ce pense-bête ?', 'shNoteDel')}</div>`;
+}
+function shConfirm(sh) {
+  return `${shHead(esc(sh.title))}<p>${esc(sh.text)}</p><div class="row"><button class="btn" data-a="shClose">Annuler</button><button class="btn primary ${sh.danger ? 'danger' : ''}" data-a="${sh.ok}">${esc(sh.okLabel)}</button></div>`;
+}
+function shSettings() {
+  const zones = [['A', 'Zone A'], ['B', 'Zone B'], ['C', 'Zone C'], ['none', 'Aucune']].map(([z, n]) => `<button class="opt" data-a="zone" data-v="${z}" aria-pressed="${(VZ[S.zone] ? S.zone : 'none') === z}">${n}</button>`).join('');
+  return `${shHead('Réglages')}
+  <div class="f"><div class="lbl">Vacances scolaires</div><div class="opts">${zones}</div><p class="hint">Dijon est en zone A. Dates officielles de l'Éducation nationale, d'octobre 2025 à l'été 2027 (la rentrée 2027 n'est pas encore officielle). Les jours fériés sont ceux de la France métropolitaine.</p></div>
+  <div class="f"><div class="lbl">Données</div><p class="hint">Tout reste dans ce navigateur, sur cet appareil. Rien n'est envoyé nulle part.</p></div>
+  <button class="btn" data-a="resetAsk">Repartir de zéro</button>
+  <button class="btn" data-a="demoAsk">Recharger les données d'exemple</button>
+  <button class="btn" data-a="logout">Se déconnecter</button>`;
+}
+function drawSheet() {
+  const el = $('#sheet'), old = el.querySelector('.sheet'), st = old ? old.scrollTop : 0;
+  const sh = UI.sheet;
+  if (!sh) { el.innerHTML = ''; return; }
+  if (UI.toast) { clearTimeout(UI.tt); UI.toast = null; drawToast(); }
+  const body = { cab: shCab, entry: shEntry, rest: shRest, note: shNote, confirm: shConfirm, settings: shSettings }[sh.type](sh);
+  el.innerHTML = `<div class="scrim" data-a="shClose"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Fenêtre">${body}</div>`;
+  const nw = el.querySelector('.sheet'); if (old) nw.scrollTop = st;
+  if (UI.focus) { const f = document.querySelector(UI.focus); if (f) f.focus(); UI.focus = null; }
+}
+
+/* ---------- rendu général ---------- */
+function render() {
+  const m = $('#main'), st = UI.rs ? 0 : m.scrollTop; UI.rs = false;
+  document.body.classList.toggle('adding', !!UI.add || UI.pick.length > 0);
+  if (UI.screen === 'login') { m.innerHTML = vLogin(); $('#bar').innerHTML = ''; $('#nav').innerHTML = ''; drawSheet(); return; }
+  m.innerHTML = UI.tab === 'act' ? vAct() : ({ year: vYear, month: vMonth, week: vWeek, day: vDay }[UI.view])();
+  drawBar(); drawNav(); m.scrollTop = st; bindGrid(); drawSheet();
+}
+const go = () => { UI.rs = true; render(); };
+
+/* ---------- glisser pour choisir une période ---------- */
+function rangeKeys(a, b) {
+  if (a > b) [a, b] = [b, a];
+  const out = []; for (let d = P(a); K(d) <= b; d = addD(d, 1)) out.push(K(d)); return out;
+}
+function paintSel(a, b) {
+  const s = new Set(rangeKeys(a, b));
+  document.querySelectorAll('#grid .cell[data-k]').forEach(c => c.classList.toggle('sel', s.has(c.dataset.k)));
+}
+function addError() {
+  const A = UI.add; if (A.rest) return null;
+  if (!A.cab) return "Choisissez d'abord un cabinet.";
+  if (S.nurses.some(n => n.cab === A.cab) && !A.nurse) return "Choisissez l'infirmière remplacée.";
+  return null;
+}
+function commit(keys) {
+  const A = UI.add, before = snap();
+  if (A.rest) {
+    const slot = A.slot || 'full', free = keys.filter(k => !restClash(k, slot)), skipped = keys.length - free.length, suf = slot === 'full' ? '' : ' (' + SLOT[slot].toLowerCase() + ')';
+    if (!free.length) { UI.sel = null; render(); toast(keys.length > 1 ? 'Ces jours ont déjà un cabinet sur cette période.' : "Ce jour a déjà un cabinet sur cette période : retirez-le d'abord."); return; }
+    const all = free.every(k => restOf(k) === slot);
+    free.forEach(k => { if (all) delete S.rest[k]; else S.rest[k] = slot; });
+    save(); UI.sel = null; render();
+    const extra = skipped ? ' (' + skipped + ' déjà avec un cabinet, ignoré' + (skipped > 1 ? 's' : '') + ')' : '';
+    toast((all ? (free.length > 1 ? 'Repos retiré sur ' + free.length + ' jours' : 'Repos retiré : ' + dayLabel(free[0])) : (free.length > 1 ? free.length + ' jours de repos voulu' + suf : dayLabel(free[0]) + ' : repos voulu' + suf)) + extra, before);
+    return;
+  }
+  let added = 0, dropped = 0;
+  keys.forEach(k => {
+    const l = S.days[k] = S.days[k] || [];
+    if (!l.some(e => e.cab === A.cab && e.nurse === A.nurse && e.slot === A.slot)) { if (dropRest(k, A.slot)) dropped++; l.push({ id: uid(), cab: A.cab, nurse: A.nurse, slot: A.slot }); added++; }
+  });
+  save(); UI.sel = null; render();
+  const nu = A.nurse && N(A.nurse);
+  if (!added) toast('Déjà ajouté sur ' + (keys.length > 1 ? 'ces jours' : 'ce jour'));
+  else toast((keys.length === 1 ? dayLabel(keys[0]) + ' ajouté' : added + ' jours ajoutés') + ' · ' + (nu ? nu.name : C(A.cab).name) + (dropped ? ' · repos retiré' : ''), before);
+}
+function bindGrid() {
+  const g = document.getElementById('grid'); if (!g || !UI.add) return;
+  let start = null, last = null;
+  const keyAt = (x, y) => { const el = document.elementFromPoint(x, y); const c = el && el.closest && el.closest('#grid .cell[data-k]'); return c ? c.dataset.k : null; };
+  g.onpointerdown = e => {
+    const c = e.target.closest('.cell[data-k]'); if (!c) return;
+    e.preventDefault(); start = last = c.dataset.k; UI.sel = null; drawBar(); paintSel(start, start);
+    try { g.setPointerCapture(e.pointerId); } catch (x) {}
+  };
+  g.onpointermove = e => { if (!start) return; const k = keyAt(e.clientX, e.clientY); if (k && k !== last) { last = k; paintSel(start, k); } };
+  g.onpointerup = () => {
+    if (!start) return; const a = start, b = last; start = null;
+    const err = addError();
+    if (a === b) { paintSel('9999-01-01', '9999-01-01'); if (err) toast(err); else commit([a]); return; }
+    if (err) { paintSel('9999-01-01', '9999-01-01'); toast(err); return; }
+    UI.sel = rangeKeys(a, b); drawBar();
+  };
+  g.onpointercancel = () => { start = null; paintSel('9999-01-01', '9999-01-01'); };
+  g.onclick = e => { if (e.detail !== 0) return; const c = e.target.closest('.cell[data-k]'); if (!c) return; const err = addError(); if (err) toast(err); else commit([c.dataset.k]); };
+}
+
+/* ---------- actions ---------- */
+function tgt(el) { return el.dataset.t === 'add' ? UI.add : UI.sheet; }
+function openCab(id, ret) {
+  const c = id && S.cabs.find(x => x.id === id);
+  const used = new Set(S.cabs.map(x => x.color.toLowerCase()));
+  const free = PALETTE.slice(0, 12).find(x => !used.has(x.toLowerCase())) || PALETTE[S.cabs.length % PALETTE.length];
+  UI.sheet = c ? { type: 'cab', id: c.id, name: c.name, code: c.code, color: col(c), nurses: S.nurses.filter(n => n.cab === c.id).map(n => ({ id: n.id, name: n.name })), notes: c.notes.slice(), nurseDraft: '', noteDraft: '', codeTouched: true, ret, pick: null, confirmPick: false }
+    : { type: 'cab', id: null, name: '', code: '', color: free, nurses: [], notes: [], nurseDraft: '', noteDraft: '', codeTouched: false, ret, pick: null, confirmPick: false };
+  render();
+}
+function noteRef(w, id, i) { return w === 'day' ? S.notes.find(x => x.id === id) : w === 'cab' ? { get text() { return C(id).notes[i]; }, set text(v) { C(id).notes[i] = v; } } : { get text() { return N(id).notes[i]; }, set text(v) { N(id).notes[i] = v; } }; }
+const snapNav = () => ({ tab: UI.tab, view: UI.view, cur: new Date(UI.cur), actCab: UI.actCab, cabPeriod: UI.cabPeriod, cabNurse: UI.cabNurse, period: UI.period, scroll: $('#main').scrollTop });
+function act(a, el) {
+  const v = el.dataset.v, sh = UI.sheet;
+  switch (a) {
+    case 'forgot': toast('La réinitialisation sera disponible dans la vraie application.'); break;
+    case 'pwShow': { const i = $('#pw'); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; el.textContent = show ? 'Masquer' : 'Afficher'; break; }
+    case 'tab': UI.back = null; UI.tab = v; UI.add = null; UI.sel = null; UI.pick = []; UI.actCab = null; go(); break;
+    case 'view': if (v === 'day' && UI.view !== 'day') UI.back = snapNav(); else if (v !== 'day') UI.back = null; UI.view = v; UI.pick = []; go(); break;
+    case 'nav': {
+      const n = +v, c = UI.cur;
+      if (UI.tab === 'act') { const per = UI.actCab ? UI.cabPeriod : UI.period; UI.cur = per === 'year' ? new Date(c.getFullYear() + n, c.getMonth(), 1) : new Date(c.getFullYear(), c.getMonth() + n, 1); }
+      else if (UI.view === 'year') UI.cur = new Date(c.getFullYear() + n, c.getMonth(), 1);
+      else if (UI.view === 'month') UI.cur = new Date(c.getFullYear(), c.getMonth() + n, 1);
+      else if (UI.view === 'week') UI.cur = addD(c, 7 * n);
+      else UI.cur = addD(c, n);
+      UI.sel = null; go(); break; }
+    case 'openDay': UI.back = snapNav(); UI.cur = P(v); UI.view = 'day'; UI.tab = 'cal'; UI.actCab = null; UI.pick = []; go(); break;
+    case 'openMonth': UI.back = null; UI.cur = new Date(UI.cur.getFullYear(), +v, 1); UI.view = 'month'; UI.pick = []; go(); break;
+    case 'addStart': UI.add = { cab: null, nurse: null, slot: 'full', rest: false }; UI.sel = null; UI.pick = []; go(); break;
+    case 'addEnd': UI.add = null; UI.sel = null; go(); break;
+    case 'selCancel': UI.sel = null; render(); break;
+    case 'selOk': { const err = addError(); if (err) toast(err); else commit(UI.sel); break; }
+    case 'cellTap': {
+      const has = (S.days[v] || []).length || restOf(v);
+      if (has) { if (UI.pick.length) { toast("Ce jour est déjà rempli. Terminez ou annulez la sélection d'abord."); break; } UI.back = snapNav(); UI.cur = P(v); UI.view = 'day'; UI.tab = 'cal'; go(); break; }
+      const i = UI.pick.indexOf(v); if (i >= 0) UI.pick.splice(i, 1); else UI.pick.push(v);
+      render(); break; }
+    case 'goBack': { const b = UI.back; if (!b) break; Object.assign(UI, { tab: b.tab, view: b.view, cur: b.cur, actCab: b.actCab, cabPeriod: b.cabPeriod, cabNurse: b.cabNurse, period: b.period, back: null, pick: [] }); go(); $('#main').scrollTop = b.scroll; break; }
+    case 'pickCancel': UI.pick = []; render(); break;
+    case 'pickAdd': UI.sheet = { type: 'entry', dates: UI.pick.slice().sort(), date: null, id: null, cab: null, nurse: null, slot: 'full', rest: false, confirmDel: false }; render(); break;
+    case 'pRest': { const A = tgt(el); A.rest = !A.rest; if (A === UI.add) UI.sel = null; render(); break; }
+    case 'pCab': { const s = tgt(el); const same = s.cab === v; s.cab = v; if (s.rest !== undefined) s.rest = false; if (!same) { const ns = S.nurses.filter(n => n.cab === v); s.nurse = ns.length === 1 ? ns[0].id : null; } render(); break; }
+    case 'pNurse': { const s = tgt(el); s.nurse = v; render(); break; }
+    case 'pSlot': { const s = tgt(el); s.slot = v; if (s.err) s.err = ''; render(); break; }
+    case 'undo': { const t = UI.toast; if (t && t.snap) { const o = JSON.parse(t.snap); S.days = o.days; S.rest = o.rest; S.notes = o.notes; S.cabs = o.cabs; S.nurses = o.nurses; save(); UI.toast = null; drawToast(); UI.sel = null; render(); } break; }
+    case 'entryNew': UI.sheet = { type: 'entry', date: K(UI.cur), id: null, cab: null, nurse: null, slot: 'full', confirmDel: false }; render(); break;
+    case 'entryEdit': { const k = K(UI.cur), e = (S.days[k] || []).find(x => x.id === v); if (e) { UI.sheet = { type: 'entry', date: k, id: e.id, cab: e.cab, nurse: e.nurse, slot: e.slot, confirmDel: false }; render(); } break; }
+    case 'shEntrySave': {
+      if (!(sh.dates && sh.rest)) {
+        if (!sh.cab) { sh.err = "Choisissez d'abord un cabinet."; render(); break; }
+        if (S.nurses.some(n => n.cab === sh.cab) && !sh.nurse) { sh.err = "Choisissez l'infirmière remplacée."; render(); break; }
+      }
+      if (sh.dates) {
+        const before = snap(), n = sh.dates.length, pl = n > 1 ? 's' : '';
+        let sk = 0, dr = 0;
+        if (sh.rest) sh.dates.forEach(k => { if (restClash(k, sh.slot)) sk++; else S.rest[k] = sh.slot; });
+        else sh.dates.forEach(k => { if (dropRest(k, sh.slot)) dr++; (S.days[k] = S.days[k] || []).push({ id: uid(), cab: sh.cab, nurse: sh.nurse, slot: sh.slot }); });
+        const nu = sh.nurse && N(sh.nurse), nn = n - sk, sp = nn > 1 ? 's' : '';
+        save(); UI.pick = []; UI.sheet = null; render();
+        toast(sh.rest ? (nn ? nn + ' jour' + sp + ' de repos voulu' + (sh.slot === 'full' ? '' : ' (' + SLOT[sh.slot].toLowerCase() + ')') : 'Aucun repos ajouté') + (sk ? ' · ' + sk + ' ignoré' + (sk > 1 ? 's' : '') + ' (cabinet déjà présent)' : '') : n + ' jour' + pl + ' ajouté' + pl + ' · ' + (nu ? nu.name : C(sh.cab).name) + (dr ? ' · repos retiré' : ''), before); break;
+      }
+      const before = snap(), l = S.days[sh.date] = S.days[sh.date] || [];
+      if (sh.id) { const e = l.find(x => x.id === sh.id); if (e) { e.cab = sh.cab; e.nurse = sh.nurse; e.slot = sh.slot; } } else l.push({ id: uid(), cab: sh.cab, nurse: sh.nurse, slot: sh.slot });
+      const dr = dropRest(sh.date, sh.slot); save(); UI.sheet = null; render(); toast((sh.id ? 'Jour modifié' : 'Cabinet ajouté') + (dr ? ' · repos retiré' : ''), before); break; }
+    case 'shEntryDel': { const before = snap(); S.days[sh.date] = (S.days[sh.date] || []).filter(e => e.id !== sh.id); if (!S.days[sh.date].length) delete S.days[sh.date]; save(); UI.sheet = null; render(); toast('Jour supprimé', before); break; }
+    case 'restNew': UI.sheet = { type: 'rest', date: K(UI.cur), editing: false, slot: 'full', confirmDel: false }; render(); break;
+    case 'restEdit': { const k = K(UI.cur), r = restOf(k); if (r) { UI.sheet = { type: 'rest', date: k, editing: true, slot: r, confirmDel: false }; render(); } break; }
+    case 'shRestSave': {
+      if (restClash(sh.date, sh.slot)) { sh.err = "Ce jour a déjà un cabinet sur cette période. Choisissez une autre durée ou supprimez d'abord le cabinet."; render(); break; }
+      const before = snap(); S.rest[sh.date] = sh.slot; save(); UI.sheet = null; render(); toast(restTxt(sh.slot) + ' noté', before); break; }
+    case 'shRestDel': { const before = snap(); delete S.rest[sh.date]; save(); UI.sheet = null; render(); toast('Repos supprimé', before); break; }
+    case 'zone': S.zone = v; save(); render(); break;
+    case 'noteScope': UI.noteScope = v; UI.noteTarget = null; render(); break;
+    case 'noteTarget': UI.noteTarget = v; render(); break;
+    case 'noteAdd': {
+      const t = UI.noteDraft.trim(); if (!t) { toast("Écrivez d'abord le pense-bête."); break; }
+      const before = snap();
+      if (UI.noteScope === 'day') S.notes.push({ id: uid(), date: K(UI.cur), text: t });
+      else if (UI.noteScope === 'cab') { if (!UI.noteTarget) { toast("Choisissez un cabinet."); break; } C(UI.noteTarget).notes.push(t); }
+      else { if (!UI.noteTarget) { toast("Choisissez une infirmière."); break; } N(UI.noteTarget).notes.push(t); }
+      UI.noteDraft = ''; save(); UI.focus = '#noteIn'; render(); toast('Pense-bête ajouté', before); break; }
+    case 'noteOpen': { const w = el.dataset.w, id = el.dataset.id, i = +el.dataset.i; const r = noteRef(w, id, i); if (!r) break;
+      const who = w === 'day' ? 'Ce jour' : w === 'cab' ? C(id).name : N(id).name;
+      UI.sheet = { type: 'note', w, id, i, text: r.text, who, confirmDel: false }; render(); break; }
+    case 'shNoteSave': { const t = sh.text.trim(); if (!t) { sh.err = 'Le pense-bête ne peut pas être vide.'; render(); break; } noteRef(sh.w, sh.id, sh.i).text = t; save(); UI.sheet = null; render(); toast('Pense-bête modifié'); break; }
+    case 'shNoteDel': { const before = snap(); if (sh.w === 'day') S.notes = S.notes.filter(x => x.id !== sh.id); else if (sh.w === 'cab') C(sh.id).notes.splice(sh.i, 1); else N(sh.id).notes.splice(sh.i, 1); save(); UI.sheet = null; render(); toast('Pense-bête supprimé', before); break; }
+    case 'period': UI.period = v; UI.cur = new Date(UI.cur.getFullYear(), UI.cur.getMonth(), 1); go(); break;
+    case 'cabOpen': UI.actCab = v; UI.cabPeriod = UI.period === 'year' ? 'year' : 'month'; UI.cabNurse = 'all'; UI.cur = new Date(UI.cur.getFullYear(), UI.cur.getMonth(), 1); go(); break;
+    case 'cabBack': UI.actCab = null; go(); break;
+    case 'cabPeriod': UI.cabPeriod = v; UI.cur = new Date(UI.cur.getFullYear(), UI.cur.getMonth(), 1); render(); break;
+    case 'cabNurse': UI.cabNurse = v; render(); break;
+    case 'cabNew': openCab(null, UI.add && UI.tab === 'cal' ? 'add' : null); break;
+    case 'cabEdit': openCab(v, null); break;
+    case 'shClose': UI.sheet = null; render(); break;
+    case 'shColor': sh.color = v; render(); break;
+    case 'shNurseAdd': { const t = sh.nurseDraft.trim(); if (t) { sh.nurses.push({ id: uid(), name: t }); sh.nurseDraft = ''; } UI.focus = '#shNurse'; render(); break; }
+    case 'shNoteAdd': { const t = sh.noteDraft.trim(); if (t) { sh.notes.push(t); sh.noteDraft = ''; } UI.focus = '#shNote'; render(); break; }
+    case 'shPickNurse': { const same = sh.pick && sh.pick.kind === 'nurse' && sh.pick.id === v; sh.pick = same ? null : { kind: 'nurse', id: v }; sh.confirmPick = false; sh.pickName = (sh.nurses.find(n => n.id === v) || {}).name || ''; render(); break; }
+    case 'shPickNote': { const same = sh.pick && sh.pick.kind === 'note' && sh.pick.i === +v; sh.pick = same ? null : { kind: 'note', i: +v }; sh.confirmPick = false; render(); break; }
+    case 'shRename': { const t = (sh.pickName || '').trim(); const nu = sh.nurses.find(n => n.id === sh.pick.id); if (nu && t) nu.name = t; sh.pick = null; render(); break; }
+    case 'shPickAsk': sh.confirmPick = true; render(); break;
+    case 'shPickNo': sh.confirmPick = false; render(); break;
+    case 'shPickYes': { if (sh.pick.kind === 'nurse') sh.nurses = sh.nurses.filter(n => n.id !== sh.pick.id); else sh.notes.splice(sh.pick.i, 1); sh.pick = null; sh.confirmPick = false; render(); break; }
+    case 'shDelAsk': sh.confirmDel = true; render(); break;
+    case 'shDelNo': sh.confirmDel = false; render(); break;
+    case 'shDelYes': {
+      const before = snap(), id = sh.id;
+      S.cabs = S.cabs.filter(c => c.id !== id); S.nurses = S.nurses.filter(n => n.cab !== id);
+      for (const k in S.days) { S.days[k] = S.days[k].filter(e => e.cab !== id); if (!S.days[k].length) delete S.days[k]; }
+      if (UI.add && UI.add.cab === id) UI.add.cab = UI.add.nurse = null;
+      if (UI.actCab === id) UI.actCab = null;
+      save(); UI.sheet = null; render(); toast('Cabinet supprimé', before); break; }
+    case 'shCabSave': {
+      const name = sh.name.trim(); if (sh.nurseDraft.trim()) { sh.nurses.push({ id: uid(), name: sh.nurseDraft.trim() }); sh.nurseDraft = ''; }
+      if (sh.noteDraft.trim()) { sh.notes.push(sh.noteDraft.trim()); sh.noteDraft = ''; }
+      if (!name) { sh.err = 'Donnez un nom au cabinet.'; render(); break; }
+      const code = ((sh.code || autoCode(name)) || name.slice(0, 2)).toUpperCase().slice(0, 3);
+      let cab;
+      if (sh.id) { cab = S.cabs.find(c => c.id === sh.id); Object.assign(cab, { name, code, color: sh.color, notes: sh.notes.slice() }); }
+      else { cab = { id: uid(), name, code, color: sh.color, notes: sh.notes.slice() }; S.cabs.push(cab); }
+      const keep = new Set(sh.nurses.map(n => n.id));
+      S.nurses = S.nurses.filter(n => n.cab !== cab.id || keep.has(n.id));
+      sh.nurses.forEach(n => { const ex = S.nurses.find(x => x.id === n.id); if (ex) ex.name = n.name; else S.nurses.push({ id: n.id, name: n.name, cab: cab.id, notes: [] }); });
+      for (const k in S.days) S.days[k].forEach(e => { if (e.nurse && !N(e.nurse)) e.nurse = null; });
+      if (sh.ret === 'add' && UI.add) { const ns = S.nurses.filter(n => n.cab === cab.id); UI.add.cab = cab.id; UI.add.rest = false; UI.add.nurse = ns.length === 1 ? ns[0].id : null; }
+      save(); UI.sheet = null; render(); toast('Cabinet enregistré : ' + name); break; }
+    case 'settings': UI.sheet = { type: 'settings' }; render(); break;
+    case 'resetAsk': UI.sheet = { type: 'confirm', title: 'Repartir de zéro ?', text: 'Cela efface tous les cabinets, infirmières, jours et pense-bêtes de ce prototype. Vous pourrez ensuite saisir vos propres noms.', ok: 'resetDo', okLabel: 'Tout effacer', danger: true }; render(); break;
+    case 'resetDo': { const z = S.zone; S = emptyData(); S.zone = z; } UI.add = null; UI.sel = null; UI.pick = []; UI.sheet = null; UI.actCab = null; save(); go(); toast('Planning vide. À vous de jouer.'); break;
+    case 'demoAsk': UI.sheet = { type: 'confirm', title: 'Recharger l\'exemple ?', text: 'Vos données actuelles seront remplacées par les données d\'exemple.', ok: 'demoDo', okLabel: 'Recharger', danger: false }; render(); break;
+    case 'demoDo': { const z = S.zone; S = seed(); S.zone = z; } UI.add = null; UI.sel = null; UI.pick = []; UI.sheet = null; UI.actCab = null; save(); go(); break;
+    case 'logout': try { localStorage.removeItem(SES); } catch (e) {} UI.screen = 'login'; UI.sheet = null; UI.add = null; UI.actCab = null; go(); break;
+  }
+}
+
+/* ---------- écouteurs ---------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-a]'); if (!el) return;
+  e.preventDefault(); act(el.dataset.a, el);
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'shColorIn' && UI.sheet) { UI.sheet.color = t.value; const p = $('#shPrev'); if (p) p.style.setProperty('--kc', t.value); return; }
+  const f = t.dataset && t.dataset.f; if (!f) return;
+  const o = t.dataset.o === 'sheet' ? UI.sheet : UI; if (!o) return;
+  o[f] = t.value;
+  if (o.type === 'cab' && (f === 'name' || f === 'code')) {
+    if (f === 'code') o.codeTouched = true;
+    if (f === 'name' && !o.codeTouched) { o.code = autoCode(t.value); const ci = $('#shCode'); if (ci) ci.value = o.code; }
+    const p = $('#shPrev'); if (p) p.textContent = (o.code || autoCode(o.name) || '?').toUpperCase();
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'shColorIn' && UI.sheet) { UI.sheet.color = t.value; render(); return; }
+  const s = t.dataset && t.dataset.sel; if (!s) return;
+  const c = UI.cur;
+  UI.cur = s === 'm' ? new Date(c.getFullYear(), +t.value, 1) : new Date(+t.value, c.getMonth(), 1);
+  render();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && UI.sheet) { UI.sheet = null; render(); return; }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.enter) { e.preventDefault(); act(e.target.dataset.enter, e.target); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'loginForm') return;
+  e.preventDefault();
+  const em = $('#email').value.trim(), pw = $('#pw').value;
+  if (!/^\S+@\S+\.\S+$/.test(em)) { UI.loginErr = 'Entrez une adresse e-mail valide.'; $('#loginErr').textContent = UI.loginErr; $('#email').focus(); return; }
+  if (!pw) { UI.loginErr = 'Entrez votre mot de passe.'; $('#loginErr').textContent = UI.loginErr; $('#pw').focus(); return; }
+  UI.loginErr = '';
+  try { if ($('#remember').checked) localStorage.setItem(SES, '1'); else localStorage.removeItem(SES); } catch (x) {}
+  UI.screen = 'app'; go();
+});
+
+render();
+})();
+</script>

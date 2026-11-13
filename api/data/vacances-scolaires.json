@@ -1,0 +1,26 @@
+{
+  "_source": "Calendrier officiel de l'Éducation nationale (education.gouv.fr, service-public.gouv.fr, vérifié avec icalendrier.fr). Dates = premier et dernier jour sans classe (samedi au dimanche). À compléter chaque année puis : php bin/console app:holidays:import",
+  "_couverture": "Toussaint 2025 → été 2027. La rentrée 2027 n'est pas encore officielle.",
+  "periods": [
+    { "zone": "ALL", "name": "Toussaint", "start": "2025-10-18", "end": "2025-11-02" },
+    { "zone": "ALL", "name": "Noël", "start": "2025-12-20", "end": "2026-01-04" },
+    { "zone": "A", "name": "Hiver", "start": "2026-02-07", "end": "2026-02-22" },
+    { "zone": "B", "name": "Hiver", "start": "2026-02-14", "end": "2026-03-01" },
+    { "zone": "C", "name": "Hiver", "start": "2026-02-21", "end": "2026-03-08" },
+    { "zone": "A", "name": "Printemps", "start": "2026-04-04", "end": "2026-04-19" },
+    { "zone": "B", "name": "Printemps", "start": "2026-04-11", "end": "2026-04-26" },
+    { "zone": "C", "name": "Printemps", "start": "2026-04-18", "end": "2026-05-03" },
+    { "zone": "ALL", "name": "Pont de l'Ascension", "start": "2026-05-14", "end": "2026-05-17" },
+    { "zone": "ALL", "name": "Été", "start": "2026-07-04", "end": "2026-08-31" },
+    { "zone": "ALL", "name": "Toussaint", "start": "2026-10-17", "end": "2026-11-01" },
+    { "zone": "ALL", "name": "Noël", "start": "2026-12-19", "end": "2027-01-03" },
+    { "zone": "A", "name": "Hiver", "start": "2027-02-13", "end": "2027-02-28" },
+    { "zone": "B", "name": "Hiver", "start": "2027-02-20", "end": "2027-03-07" },
+    { "zone": "C", "name": "Hiver", "start": "2027-02-06", "end": "2027-02-21" },
+    { "zone": "A", "name": "Printemps", "start": "2027-04-10", "end": "2027-04-25" },
+    { "zone": "B", "name": "Printemps", "start": "2027-04-17", "end": "2027-05-02" },
+    { "zone": "C", "name": "Printemps", "start": "2027-04-03", "end": "2027-04-18" },
+    { "zone": "ALL", "name": "Pont de l'Ascension", "start": "2027-05-06", "end": "2027-05-09" },
+    { "zone": "ALL", "name": "Été", "start": "2027-07-03", "end": "2027-09-01" }
+  ]
+}

@@ -1,0 +1,6 @@
+# Secrets et fichiers locaux : jamais dans git
+.env.local
+.env.*.local
+*.pem
+.DS_Store
+.claude/settings.local.json
