@@ -1,0 +1,27 @@
+# Front Angular et API Symfony servis depuis ce dossier (même domaine).
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Transmet l'en-tête Authorization (jeton JWT) à PHP.
+    RewriteCond %{HTTP:Authorization} .+
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%0]
+
+    # /api/... → Symfony
+    RewriteRule ^api(/|$) index.php [L]
+
+    # Fichier existant (JS, CSS, icônes…) → servi tel quel
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Tout le reste → application Angular
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Toujours revalider ce qui décide de la version de l'application.
+    <FilesMatch "^(index\.html|ngsw\.json|ngsw-worker\.js|manifest\.webmanifest)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
