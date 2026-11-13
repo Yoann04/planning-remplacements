@@ -98,15 +98,24 @@ Compléter `api/data/vacances-scolaires.json` avec les dates officielles (educat
 php bin/console app:holidays:import
 ```
 
-## Déploiement (piste AlwaysData, à confirmer)
+## Déploiement (AlwaysData)
 
-Front et API servis **sur le même domaine** : pas de CORS en production, un seul certificat HTTPS.
+En ligne : https://projetplanning.alwaysdata.net — front et API **sur le même domaine** (pas de CORS en production, un seul HTTPS).
+Serveur : PHP 8.4, MariaDB 11.8. Le code est cloné depuis GitHub dans `~/planning`, et `~/www` (racine du site) est un lien vers `~/planning/api/public`.
+`api/public/.htaccess` envoie `/api/*` à Symfony, sert les fichiers existants et renvoie tout le reste vers `index.html`.
 
-1. `npm --prefix web run build` → copier `web/dist/web/browser/*` dans `api/public/` (à côté de `index.php`).
-2. Envoyer `api/` par SFTP ou `git pull` en SSH, puis `../composer.sh install --no-dev --optimize-autoloader`.
-3. Sur le serveur : `api/.env.local` avec `APP_ENV=prod`, les secrets, `DATABASE_URL` MariaDB (`serverVersion=10.11.x-MariaDB`), `CORS_ALLOW_ORIGIN` = l'adresse du site.
-4. `php bin/console lexik:jwt:generate-keypair`, `doctrine:migrations:migrate`, `app:holidays:import`, `app:user:create`.
-5. Racine du site = `api/public`, avec une réécriture : fichier existant → servi tel quel ; `/api/*` → `index.php` ; le reste → `index.html` (application Angular).
-6. Sur l'iPhone : ouvrir le site dans Safari → Partager → « Sur l'écran d'accueil ».
+Première installation (déjà faite) :
 
-Les étapes 3 à 6 seront validées lors de la mise en ligne (étape 3 du brief).
+1. `git clone` dans `~/planning`, puis `composer install --no-dev --optimize-autoloader` dans `api/`.
+2. `api/.env.local` écrit sur le serveur par un petit script qui demande le mot de passe de la base en masqué et génère `APP_SECRET` / `JWT_PASSPHRASE` (rien ne transite ailleurs), puis `composer dump-env prod`.
+3. `lexik:jwt:generate-keypair`, `doctrine:migrations:migrate`, `app:holidays:import`.
+4. Comptes : `php bin/console app:user:create <e-mail>` en SSH (mot de passe tapé en masqué).
+5. Sur l'iPhone : ouvrir le site dans Safari → Partager → « Sur l'écran d'accueil ».
+
+Mise à jour :
+
+```bash
+npm --prefix web run build
+rsync -az web/dist/web/browser/ <compte>@ssh-<compte>.alwaysdata.net:planning/api/public/
+ssh <compte>@ssh-<compte>.alwaysdata.net 'cd planning && git pull && cd api && composer install --no-dev -o && php bin/console doctrine:migrations:migrate -n && php bin/console cache:clear'
+```
