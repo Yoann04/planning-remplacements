@@ -2,11 +2,11 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { errorMessage } from './auth.interceptor';
 import { publicHoliday, schoolHoliday } from './holidays';
-import { Cabinet, Mutation, Note, Nurse, Planning, SchoolHoliday, Slot, WorkDay, Zone } from './models';
+import { Cabinet, Mutation, Note, Nurse, PersonalEvent, Planning, SchoolHoliday, Slot, WorkDay, Zone } from './models';
 import { indexPlanning } from './rules';
 import { UiState } from './ui.state';
 
-const EMPTY: Planning = { user: { email: '', zone: 'A' }, cabinets: [], nurses: [], days: [], rests: [], notes: [] };
+const EMPTY: Planning = { user: { email: '', zone: 'A' }, cabinets: [], nurses: [], days: [], rests: [], notes: [], events: [] };
 const DELETED: Cabinet = { id: '?', name: 'Cabinet supprimé', code: '?', color: '#3B82F6', active: false };
 
 /** Données du planning (signaux) et actions qui passent par l'API. */
@@ -34,6 +34,8 @@ export class PlanningStore {
   nursesOf = (cabId: string | null) => this.nurses().filter(n => n.cabinetId === cabId);
   entries = (k: string): WorkDay[] => this.index().days.get(k) ?? [];
   rest = (k: string): Slot | null => this.index().rests.get(k)?.slot ?? null;
+  /** Rendez-vous perso du jour (matin, après-midi, journée). */
+  events = (k: string): PersonalEvent[] => this.index().events.get(k) ?? [];
   ferie = (k: string) => publicHoliday(k);
   vacation = (k: string) => schoolHoliday(k, this.zone(), this.holidays());
   dayNotes = (k: string): Note[] => this.planning().notes.filter(n => n.scope === 'day' && n.date === k);

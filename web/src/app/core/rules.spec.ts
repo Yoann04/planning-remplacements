@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Cabinet, Note, WorkDay } from './models';
-import { addChoices, autoCode, cabinetNotes, dayTotals, futureDays, legendCabinets, entryClash, freeColor, jours, overlaps, restClash, slotValue } from './rules';
+import { Cabinet, Note, PersonalEvent, Planning, WorkDay } from './models';
+import { addChoices, autoCode, cabinetNotes, dayTotals, eventLine, eventText, futureDays, indexPlanning, legendCabinets, entryClash, freeColor, jours, overlaps, restClash, slotValue } from './rules';
 
 const wd = (date: string, slot: WorkDay['slot'], cabinetId = 'c1'): WorkDay => ({ id: date + slot + cabinetId, date, cabinetId, nurseId: null, slot });
 
@@ -107,5 +107,35 @@ describe('cabinets en veille', () => {
     const days = [wd('2026-11-15', 'full', 'veille'), wd('2026-11-16', 'am', 'veille'), wd('2026-12-01', 'full', 'veille'), wd('2026-12-01', 'full', 'actif')];
     expect(futureDays(days, 'veille', '2026-11-15')).toBe(1.5);
     expect(futureDays(days, 'autre', '2026-11-15')).toBe(0);
+  });
+});
+
+describe('rendez-vous perso', () => {
+  const ev = (id: string, date: string, slot: PersonalEvent['slot'], label = 'RDV perso'): PersonalEvent => ({ id, date, slot, label });
+
+  it('ligne en haut de la case : journée, matin (gauche) ou après-midi (droite)', () => {
+    expect(eventLine([])).toBeNull();
+    expect(eventLine([ev('1', 'd', 'am')])).toBe('am');
+    expect(eventLine([ev('1', 'd', 'pm'), ev('2', 'd', 'pm')])).toBe('pm');
+    expect(eventLine([ev('1', 'd', 'am'), ev('2', 'd', 'pm')])).toBe('full');
+    expect(eventLine([ev('1', 'd', 'pm'), ev('2', 'd', 'full')])).toBe('full');
+  });
+
+  it("écrit le rendez-vous pour l'avertissement", () => {
+    expect(eventText(ev('1', 'd', 'am', 'Garage'))).toBe('Matin · Garage');
+    expect(eventText(ev('1', 'd', 'full'))).toBe('Journée · RDV perso');
+  });
+
+  it('range les rendez-vous par jour, plusieurs le même jour, sans toucher aux jours de travail', () => {
+    const p: Planning = {
+      user: { email: '', zone: 'A' }, cabinets: [], nurses: [], rests: [], notes: [],
+      days: [wd('2026-11-24', 'full')],
+      events: [ev('a', '2026-11-24', 'pm', 'École'), ev('b', '2026-11-24', 'am', 'Garage'), ev('c', '2026-11-25', 'full')],
+    };
+    const idx = indexPlanning(p);
+    expect(idx.events.get('2026-11-24')!.map(e => e.label)).toEqual(['Garage', 'École']);
+    expect(idx.events.get('2026-11-25')!.length).toBe(1);
+    expect(idx.events.get('2026-11-26')).toBeUndefined();
+    expect(idx.days.get('2026-11-24')!.length).toBe(1);
   });
 });

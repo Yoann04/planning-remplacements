@@ -13,9 +13,9 @@ Captures : [`docs/captures/`](docs/captures/) · Architecture : [`ARCHITECTURE.m
 |---|---|---|---|
 | ![](docs/captures/02-mois.jpg) | ![](docs/captures/03-jour.jpg) | ![](docs/captures/04-activite.jpg) | ![](docs/captures/05-ajout-glisser.jpg) |
 
-| Fiche d'un cabinet (pense-bêtes) | Cabinets en veille |
-|---|---|
-| ![](docs/captures/09-fiche-cabinet.jpg) | ![](docs/captures/10-cabinets-en-veille.jpg) |
+| Fiche d'un cabinet (pense-bêtes) | Cabinets en veille | Rendez-vous perso : avertissement | Rendez-vous perso : vue jour |
+|---|---|---|---|
+| ![](docs/captures/09-fiche-cabinet.jpg) | ![](docs/captures/10-cabinets-en-veille.jpg) | ![](docs/captures/11-rdv-perso-avertissement.jpg) | ![](docs/captures/12-rdv-perso-jour.jpg) |
 
 ## Arborescence
 
@@ -85,16 +85,16 @@ front et API sont vus sur la même origine, comme en production.
 cd api && php bin/phpunit
 ```
 
-36 tests : connexion et jeton, mot de passe haché, limitation des tentatives, isolation entre utilisateurs,
+41 tests : connexion et jeton, mot de passe haché, limitation des tentatives, isolation entre utilisateurs,
 règles repos / cabinet, annulation, suppression en cascade, compteurs, pense-bêtes d'un cabinet,
-cabinets en veille. Base SQLite jetable (`.env.test`).
+cabinets en veille, rendez-vous perso. Base SQLite jetable (`.env.test`).
 
 ```bash
 npm --prefix web test -- --watch=false
 ```
 
-27 tests Vitest sur les fonctions pures : demi-journées, chevauchements, jours faits / prévus, jours fériés (Pâques), vacances par zone,
-dates en français, regroupement des pense-bêtes d'un cabinet, choix d'ajout sans les cabinets en veille, légende, balayage (seuils, bords, mode ajout).
+30 tests Vitest sur les fonctions pures : demi-journées, chevauchements, jours faits / prévus, jours fériés (Pâques), vacances par zone,
+dates en français, regroupement des pense-bêtes d'un cabinet, choix d'ajout sans les cabinets en veille, légende, balayage (seuils, bords, mode ajout), repère et texte des rendez-vous perso.
 
 ## Mise à jour annuelle des vacances scolaires
 

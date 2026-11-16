@@ -20,7 +20,7 @@ import { DeleteBlock, SheetHead } from './sheet-head';
     } @else {
       <app-sheet-head [title]="title()" />
       <p class="sub">{{ sub() }}</p>
-      <app-pickers [state]="st()" [allowRest]="!!dates()" [keepCab]="keepCab" (change)="st.set($event); err.set('')" />
+      <app-pickers [state]="st()" [allowRest]="!!dates()" [allowPerso]="!id()" [keepCab]="keepCab" (change)="st.set($event); err.set('')" />
       @if (err()) { <p class="err" role="alert">{{ err() }}</p> }
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn primary big" [disabled]="actions.busy()" (click)="save()">{{ dates() ? 'Ajouter' : 'Enregistrer' }}</button>
@@ -40,17 +40,17 @@ export class EntrySheet {
   readonly dates = input<string[] | null>(null);
   readonly id = input<string | null>(null);
 
-  protected st = signal<PickState>({ cab: null, nurse: null, slot: 'full', rest: false });
+  protected st = signal<PickState>({ cab: null, nurse: null, slot: 'full', rest: false, perso: false, label: '' });
   protected err = signal('');
   /** Cabinet d'origine du jour modifié (proposé même s'il est en veille). */
   protected keepCab: string | null = null;
 
-  protected title = computed(() => { const n = this.dates()?.length ?? 0; return n ? `Ajouter ${n} jour${n > 1 ? 's' : ''}` : this.id() ? 'Modifier ce jour' : 'Ajouter un cabinet'; });
+  protected title = computed(() => { const n = this.dates()?.length ?? 0; return n ? `Ajouter ${n} jour${n > 1 ? 's' : ''}` : this.id() ? 'Modifier ce jour' : this.st().perso ? 'Ajouter un rendez-vous perso' : 'Ajouter un cabinet'; });
   protected sub = computed(() => (this.dates() ? cap(listDates(this.dates()!)) : dayLabel(this.date()!)));
 
   ngOnInit(): void {
     const e = this.id() ? this.store.entries(this.date()!).find(x => x.id === this.id()) : null;
-    if (e) { this.st.set({ cab: e.cabinetId, nurse: e.nurseId, slot: e.slot, rest: false }); this.keepCab = e.cabinetId; }
+    if (e) { this.st.set({ cab: e.cabinetId, nurse: e.nurseId, slot: e.slot, rest: false, perso: false, label: '' }); this.keepCab = e.cabinetId; }
   }
 
   protected del = async () => {
@@ -60,6 +60,13 @@ export class EntrySheet {
 
   protected async save(): Promise<void> {
     const s = this.st();
+    if (s.perso) {
+      const r = await this.actions.addEvents(this.dates() ?? [this.date()!], s.slot, s.label, true);
+      if (!r.ok) { if (r.error) this.err.set(r.error); return; }
+      if (this.dates()) this.ui.pick.set([]);
+      this.ui.closeSheet();
+      return;
+    }
     if (!(this.dates() && s.rest)) {
       if (!s.cab) { this.err.set("Choisissez d'abord un cabinet."); return; }
       if (this.store.nursesOf(s.cab).length && !s.nurse) { this.err.set("Choisissez l'infirmière remplacée."); return; }

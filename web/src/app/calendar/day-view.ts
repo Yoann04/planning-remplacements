@@ -25,6 +25,13 @@ import { DayTags } from './day-tags';
     <app-view-switch />
     <app-day-tags [day]="k" [long]="true" />
     <div class="dsum"><span>{{ summary().left }}</span><strong>{{ summary().right }}</strong></div>
+    @for (ev of events(); track ev.id) {
+      <button class="card entry evcard" (click)="ui.openSheet({ type: 'event', id: ev.id })">
+        <div class="cap">{{ ev.slot === 'full' ? 'Journée' : slotLabel[ev.slot] }} · rendez-vous perso</div>
+        <div class="who"><div><b>{{ ev.label }}</b><small>Simple information</small></div><span class="go"><app-icon name="go" [size]="18" /></span></div>
+        <span class="tap">Toucher pour modifier ou supprimer</span>
+      </button>
+    }
     @if (rest() === 'am') { <ng-container *ngTemplateOutlet="restCard" /> }
     @for (e of entries(); track e.id) {
       <button class="card entry kc" [style.--kc]="store.cab(e.cabinetId).color" (click)="ui.openSheet({ type: 'entry', date: k, dates: null, id: e.id })">
@@ -89,6 +96,7 @@ export class DayView {
   protected week = computed(() => isoWeek(this.ui.cur()));
   protected entries = computed(() => this.store.entries(this.dayKey()));
   protected rest = computed(() => this.store.rest(this.dayKey()));
+  protected events = computed(() => this.store.events(this.dayKey()));
 
   protected summary = computed(() => {
     const es = this.entries(), r = this.rest(), tot = es.reduce((a, e) => a + slotValue(e.slot), 0);

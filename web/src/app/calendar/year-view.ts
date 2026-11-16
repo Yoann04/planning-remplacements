@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MONTHS, MS, dow, pad, todayKey, yearRange } from '../core/dates';
 import { PlanningStore } from '../core/planning.store';
-import { dayTotals, jours } from '../core/rules';
+import { dayTotals, eventLine, jours } from '../core/rules';
 import { UiState } from '../core/ui.state';
 import { Head } from '../shared/head';
 import { Legend } from '../shared/legend';
@@ -54,6 +54,8 @@ export class YearView {
         if (k === today) cls += ' today';
         if (this.store.vacation(k)) cls += ' vac';
         if (this.store.ferie(k)) cls += ' fer';
+        const ev = eventLine(this.store.events(k));
+        if (ev) cls += ' ev-' + ev;
         return { k, cls, bg };
       });
       return { i, name, full: MONTHS[i], lead: Array(dow(new Date(y, i, 1))), squares, isNow: y === now.getFullYear() && i === now.getMonth() };

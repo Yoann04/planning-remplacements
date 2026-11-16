@@ -33,7 +33,7 @@ export class Actions {
   /** Erreur de saisie du mode ajout, avant tout envoi. */
   addError(): string | null {
     const a = this.ui.add();
-    if (!a || a.rest) return null;
+    if (!a || a.rest || a.perso) return null;
     if (!a.cab) return "Choisissez d'abord un cabinet.";
     if (this.store.nursesOf(a.cab).length && !a.nurse) return "Choisissez l'infirmière remplacée.";
     return null;
@@ -45,7 +45,9 @@ export class Actions {
     if (!a) return;
     const err = this.addError();
     if (err) { this.ui.sel.set(null); this.ui.toast(err); return; }
-    if (a.rest) {
+    if (a.perso) {
+      await this.addEvents(keys, a.slot, a.label);
+    } else if (a.rest) {
       const suf = a.slot === 'full' ? '' : ` (${SLOT_LABEL[a.slot].toLowerCase()})`;
       const first = keys.find(k => !restClash(this.store.entries(k), a.slot)) ?? keys[0];
       await this.go(() => this.api.setRests(keys, a.slot, true), r => {
@@ -67,9 +69,19 @@ export class Actions {
     this.ui.sel.set(null);
   }
 
+  /** Rendez-vous perso sur un ou plusieurs jours (simple information, rien n'est retiré ni bloqué). */
+  addEvents = (dates: string[], slot: Slot, label: string, inline = false) =>
+    this.go(() => this.api.addEvents(dates, slot, label), r => {
+      const n = Number(r['added'] ?? dates.length);
+      return n > 1 ? `${n} rendez-vous perso ajoutés` : `${dayLabel(dates[0])} : rendez-vous perso`;
+    }, inline);
+  saveEvent = (id: string, slot: Slot, label: string) => this.go(() => this.api.updateEvent(id, slot, label), () => 'Rendez-vous perso modifié', true);
+  deleteEvent = (id: string) => this.go(() => this.api.deleteEvent(id), () => 'Rendez-vous perso supprimé', true);
+
   /** Fenêtre « Ajouter N jours » (jours vides sélectionnés dans la vue mois). */
-  async addToPicked(dates: string[], st: { cab: string | null; nurse: string | null; slot: Slot; rest: boolean }) {
+  async addToPicked(dates: string[], st: { cab: string | null; nurse: string | null; slot: Slot; rest: boolean; perso?: boolean; label?: string }) {
     const pl = dates.length > 1 ? 's' : '';
+    if (st.perso) return this.addEvents(dates, st.slot, st.label ?? '', true);
     if (st.rest) {
       return this.go(() => this.api.setRests(dates, st.slot, false), r => {
         const set = n(r, 'set'), sk = n(r, 'skipped');

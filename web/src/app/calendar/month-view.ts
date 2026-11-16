@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Actions } from '../core/actions';
 import { MONTHS, addDays, cap, dayLabel, dow, key, monthRange, rangeKeys, todayKey } from '../core/dates';
 import { PlanningStore } from '../core/planning.store';
-import { SLOT_LABEL, dayTotals, jours, num, restText } from '../core/rules';
+import { SLOT_LABEL, dayTotals, eventLine, eventText, jours, num, restText } from '../core/rules';
 import { UiState } from '../core/ui.state';
 import { Chip } from '../shared/chip';
 import { Head } from '../shared/head';
@@ -43,8 +43,8 @@ import { ViewSwitch } from '../shared/view-switch';
     <div class="sum"><strong>{{ jours(totals().total) }}</strong><span>{{ num(totals().done) }} fait{{ totals().done >= 2 ? 's' : '' }} · {{ num(totals().todo) }} prévu{{ totals().todo >= 2 ? 's' : '' }}</span></div>
     @if (ui.add(); as a) {
       <section class="panel" aria-label="Ajouter des jours">
-        <app-pickers [state]="a" [allowRest]="true" [allowNewCabinet]="true" [addMode]="true" (change)="setAdd($event)" (newCabinet)="ui.openSheet({ type: 'cab', id: null, ret: 'add' })" />
-        @if (!a.rest) { <p class="hint">Touchez un jour pour l'ajouter, ou glissez le doigt sur plusieurs jours puis validez.</p> }
+        <app-pickers [state]="a" [allowRest]="true" [allowPerso]="true" [allowNewCabinet]="true" [addMode]="true" (change)="setAdd($event)" (newCabinet)="ui.openSheet({ type: 'cab', id: null, ret: 'add' })" />
+        @if (!a.rest && !a.perso) { <p class="hint">Touchez un jour pour l'ajouter, ou glissez le doigt sur plusieurs jours puis validez.</p> }
       </section>
     } @else if (!store.cabinets().length) {
       <div class="empty"><p><strong>Aucun cabinet pour l'instant.</strong> Créez votre premier cabinet, puis ajoutez vos jours.</p>
@@ -76,11 +76,13 @@ export class MonthView {
     return Array.from({ length: weeks * 7 }, (_, i) => {
       const d = addDays(first, i - lead), k = key(d);
       if (d.getMonth() !== m) return { k, day: d.getDate(), out: true, entries: [], cls: '', label: '', fe: null, empty: false };
-      const es = this.store.entries(k), r = this.store.rest(k), fe = this.store.ferie(k), va = this.store.vacation(k);
+      const es = this.store.entries(k), r = this.store.rest(k), fe = this.store.ferie(k), va = this.store.vacation(k), evs = this.store.events(k);
       const label = dayLabel(k)
         + (es.length ? ' : ' + es.map(e => this.store.cab(e.cabinetId).name + (e.slot === 'full' ? '' : ' ' + SLOT_LABEL[e.slot].toLowerCase())).join(', ') : r ? '' : ' : vide')
-        + (r ? (es.length ? ', ' : ' : ') + restText(r).toLowerCase() : '') + (fe ? ' · jour férié : ' + fe : '') + (va ? ' · vacances scolaires : ' + va : '');
-      const cls = 'cell' + (k === today ? ' today' : '') + (r === 'full' && !es.length ? ' rest' : '') + (r && r !== 'full' ? ' rest-' + r : '') + (va ? ' vac' : '');
+        + (r ? (es.length ? ', ' : ' : ') + restText(r).toLowerCase() : '') + (fe ? ' · jour férié : ' + fe : '') + (va ? ' · vacances scolaires : ' + va : '')
+        + (evs.length ? ' · rendez-vous perso : ' + evs.map(eventText).join(', ') : '');
+      const ev = eventLine(evs);
+      const cls = 'cell' + (k === today ? ' today' : '') + (r === 'full' && !es.length ? ' rest' : '') + (r && r !== 'full' ? ' rest-' + r : '') + (va ? ' vac' : '') + (ev ? ' ev-' + ev : '');
       return { k, day: d.getDate(), out: false, entries: es, cls, label, fe, empty: !es.length && !r };
     });
   });
@@ -99,9 +101,25 @@ export class MonthView {
   /** Toucher un jour hors mode ajout ; en mode ajout, seul le clavier (detail = 0) passe par ici. */
   protected tap(ev: MouseEvent, k: string, empty: boolean): void {
     if (this.ui.add()) {
-      if (ev.detail === 0) this.actions.commit([k]);
+      if (ev.detail === 0) this.withNotice([k], () => this.actions.commit([k]));
       return;
     }
+    this.withNotice([k], () => this.tapDay(k, empty));
+  }
+
+  /**
+   * Touchée d'une case qui a un rendez-vous perso : avertissement à valider avec « OK », puis le geste
+   * continue normalement (sélection, ajout, ouverture du jour). Rien n'est bloqué.
+   */
+  private withNotice(keys: string[], then: () => void): void {
+    const hits = keys.filter(k => this.store.events(k).length);
+    if (!hits.length) { then(); return; }
+    const evs = (k: string) => this.store.events(k).map(eventText);
+    if (hits.length === 1) this.ui.notify('Rendez-vous perso · ' + dayLabel(hits[0]).toLowerCase(), evs(hits[0]), then);
+    else this.ui.notify('Rendez-vous perso sur ces jours', hits.map(k => `${cap(dayLabel(k))} : ${evs(k).join(', ')}`), then);
+  }
+
+  private tapDay(k: string, empty: boolean): void {
     if (!empty) {
       if (this.ui.pick().length) { this.ui.toast("Ce jour est déjà rempli. Terminez ou annulez la sélection d'abord."); return; }
       this.ui.openDay(k);
@@ -138,7 +156,7 @@ export class MonthView {
     this.drag.set(null);
     const err = this.actions.addError();
     if (err) { this.ui.toast(err); return; }
-    if (d.a === d.b) this.actions.commit([d.a]);
-    else this.ui.sel.set(rangeKeys(d.a, d.b));
+    if (d.a === d.b) this.withNotice([d.a], () => this.actions.commit([d.a]));
+    else { const ks = rangeKeys(d.a, d.b); this.withNotice(ks, () => this.ui.sel.set(ks)); }
   }
 }

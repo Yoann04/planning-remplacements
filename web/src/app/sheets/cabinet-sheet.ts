@@ -204,7 +204,7 @@ export class CabinetSheet {
     const add = this.ui.add();
     if (this.ret() === 'add' && add && newId) {
       const ns = this.store.nursesOf(newId);
-      this.ui.add.set({ ...add, cab: newId, rest: false, nurse: ns.length === 1 ? ns[0].id : null });
+      this.ui.add.set({ ...add, cab: newId, rest: false, perso: false, nurse: ns.length === 1 ? ns[0].id : null });
     }
     this.ui.closeSheet();
   }

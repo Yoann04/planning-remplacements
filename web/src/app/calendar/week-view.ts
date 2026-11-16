@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DOW3, MONTHS, addDays, dow, isoWeek, key, mabbr, todayKey } from '../core/dates';
 import { PlanningStore } from '../core/planning.store';
-import { SLOT_LABEL, jours, restText, slotValue } from '../core/rules';
+import { PersonalEvent } from '../core/models';
+import { SLOT_LABEL, eventLine, jours, restText, slotValue } from '../core/rules';
 import { UiState } from '../core/ui.state';
 import { Chip } from '../shared/chip';
 import { Head } from '../shared/head';
@@ -20,7 +21,7 @@ import { DayTags } from './day-tags';
     <app-view-switch />
     <div style="display:flex;flex-direction:column;gap:8px">
       @for (r of week().rows; track r.k) {
-        <button class="wrow" [class.rest]="r.fullRest" [class.vac]="r.vac" [class.today]="r.today" (click)="ui.openDay(r.k)">
+        <button [class]="'wrow' + (r.ev ? ' ev-' + r.ev : '')" [class.rest]="r.fullRest" [class.vac]="r.vac" [class.today]="r.today" (click)="ui.openDay(r.k)">
           <div class="wd"><div class="w3">{{ r.dow }}</div><div class="wn">{{ r.day }}</div></div>
           <div class="wl">
             <app-day-tags [day]="r.k" />
@@ -29,7 +30,8 @@ import { DayTags } from './day-tags';
               <div class="ln"><app-chip [entry]="e" size="lg" /><div style="min-width:0"><div class="t1">{{ store.cab(e.cabinetId).name }}</div><div class="t2">{{ line(e) }}</div></div></div>
             }
             @if (r.restLine && !r.restFirst) { <div class="rt">{{ r.restLine }}</div> }
-            @if (!r.entries.length && !r.restLine) { <div class="none">Rien de prévu</div> }
+            @if (!r.entries.length && !r.restLine && !r.events.length) { <div class="none">Rien de prévu</div> }
+            @for (e of r.events; track e.id) { <div class="evl">{{ evLine(e) }}</div> }
             @for (n of r.notes; track n.id) { <div class="notep"><app-icon name="note" [size]="18" [stroke]="2" /><span>{{ n.text }}</span></div> }
           </div>
         </button>
@@ -41,6 +43,8 @@ export class WeekView {
   protected ui = inject(UiState);
   protected store = inject(PlanningStore);
   protected jours = jours;
+  /** « RDV perso · matin · Garage », ou « RDV perso · journée » sans texte. */
+  protected evLine = (e: PersonalEvent) => ['RDV perso', SLOT_LABEL[e.slot].toLowerCase(), ...(e.label === 'RDV perso' ? [] : [e.label])].join(' · ');
 
   protected line(e: { slot: 'full' | 'am' | 'pm'; nurseId: string | null }): string {
     const nu = this.store.nurse(e.nurseId);
@@ -58,7 +62,7 @@ export class WeekView {
       es.forEach(e => (total += slotValue(e.slot)));
       const restLine = r && !(r === 'full' && es.length) ? restText(r) : '';
       return { k, day: d.getDate(), dow: DOW3[i], entries: es, restLine, restFirst: r === 'am' && !!restLine, fullRest: r === 'full' && !es.length,
-        vac: !!this.store.vacation(k), today: k === today, notes: this.store.dayNotes(k) };
+        vac: !!this.store.vacation(k), today: k === today, notes: this.store.dayNotes(k), events: this.store.events(k), ev: eventLine(this.store.events(k)) };
     });
     return { num: isoWeek(mon), sub, rows, total };
   });

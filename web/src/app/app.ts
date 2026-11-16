@@ -47,7 +47,15 @@ import { SheetHost } from './shell/sheet-host';
         <div class="toast"><span>{{ t.msg }}</span>@if (t.undoId) { <button (click)="store.undo(t.undoId)">Annuler</button> }</div>
       }
     </div>
-    <app-sheet-host />`,
+    <app-sheet-host />
+    @if (ui.notice(); as n) {
+      <div class="scrim" style="z-index:59" (click)="ui.closeNotice()"></div>
+      <div class="notice" role="alertdialog" aria-modal="true" aria-labelledby="noticeT">
+        <h2 id="noticeT">{{ n.title }}</h2>
+        @for (l of n.lines; track $index) { <p>{{ l }}</p> }
+        <button class="btn primary big" (click)="ui.closeNotice()" autofocus>OK</button>
+      </div>
+    }`,
 })
 export class App {
   protected auth = inject(AuthService);
@@ -58,6 +66,8 @@ export class App {
   protected swipeFrom: Point | null = null;
 
   constructor() {
+    // Échap ferme l'avertissement comme « OK ».
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && this.ui.notice()) this.ui.closeNotice(); });
     // Connexion → chargement du planning ; déconnexion (ou jeton expiré) → tout est vidé.
     effect(() => {
       if (this.auth.loggedIn()) void this.store.load();

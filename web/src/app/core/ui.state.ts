@@ -7,7 +7,10 @@ export type View = 'year' | 'month' | 'week' | 'day';
 export type Period = 'month' | 'year' | 'all';
 
 /** Mode « Ajouter des jours » : cabinet (ou repos) choisi d'abord, puis toucher ou glisser sur les jours. */
-export interface AddState { cab: string | null; nurse: string | null; slot: Slot; rest: boolean }
+export interface AddState { cab: string | null; nurse: string | null; slot: Slot; rest: boolean; perso: boolean; label: string }
+
+/** Avertissement à valider avec « OK » ; then = le geste interrompu, repris après « OK ». */
+export interface Notice { title: string; lines: string[]; then: (() => void) | null }
 
 /** Fenêtre du bas actuellement ouverte. */
 export type Sheet =
@@ -15,6 +18,7 @@ export type Sheet =
   | { type: 'entry'; date: string | null; dates: string[] | null; id: string | null }
   | { type: 'rest'; date: string; editing: boolean }
   | { type: 'note'; id: string | null; cabinetId?: string }
+  | { type: 'event'; id: string }
   | { type: 'settings' };
 
 interface Back { tab: Tab; view: View; cur: Date; actCab: string | null; cabPeriod: 'month' | 'year'; cabNurse: string; period: Period; scroll: number }
@@ -32,6 +36,7 @@ export class UiState {
   /** Jours vides touchés dans la vue mois (sélection multiple), avant « Ajouter ». */
   readonly pick = signal<string[]>([]);
   readonly sheet = signal<Sheet | null>(null);
+  readonly notice = signal<Notice | null>(null);
   readonly toastState = signal<{ msg: string; undoId: string | null } | null>(null);
   readonly period = signal<Period>('month');
   readonly actCab = signal<string | null>(null);
@@ -53,6 +58,17 @@ export class UiState {
   hideToast(): void {
     clearTimeout(this.timer);
     this.toastState.set(null);
+  }
+
+  /** Affiche l'avertissement ; « OK » le ferme puis reprend le geste. */
+  notify(title: string, lines: string[], then: (() => void) | null = null): void {
+    this.hideToast();
+    this.notice.set({ title, lines, then });
+  }
+  closeNotice(): void {
+    const n = this.notice();
+    this.notice.set(null);
+    n?.then?.();
   }
 
   openSheet(s: Sheet): void {
@@ -138,7 +154,7 @@ export class UiState {
   }
 
   startAdd(): void {
-    this.add.set({ cab: null, nurse: null, slot: 'full', rest: false });
+    this.add.set({ cab: null, nurse: null, slot: 'full', rest: false, perso: false, label: '' });
     this.sel.set(null);
     this.pick.set([]);
     this.scrollTo.set(0);

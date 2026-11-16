@@ -8,6 +8,8 @@ export interface Cabinet { id: string; name: string; code: string; color: string
 export interface Nurse { id: string; cabinetId: string; name: string }
 export interface WorkDay { id: string; date: string; cabinetId: string; nurseId: string | null; slot: Slot }
 export interface Rest { id: string; date: string; slot: Slot }
+/** Rendez-vous perso : simple information (jamais bloquante, hors compteurs). */
+export interface PersonalEvent { id: string; date: string; slot: Slot; label: string }
 export interface Note { id: string; scope: NoteScope; date: string | null; cabinetId: string | null; nurseId: string | null; text: string }
 
 export interface Planning {
@@ -17,6 +19,7 @@ export interface Planning {
   days: WorkDay[];
   rests: Rest[];
   notes: Note[];
+  events: PersonalEvent[];
 }
 
 export interface SchoolHoliday { zone: 'ALL' | 'A' | 'B' | 'C'; name: string; start: string; end: string }

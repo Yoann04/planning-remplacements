@@ -1,5 +1,5 @@
 import { key, todayKey } from './dates';
-import { Cabinet, Note, Planning, Rest, Slot, WorkDay } from './models';
+import { Cabinet, Note, PersonalEvent, Planning, Rest, Slot, WorkDay } from './models';
 
 /** Règles et calculs du planning (mêmes règles que l'API, utilisées pour l'affichage). Fonctions pures. */
 export const SLOT_LABEL: Record<Slot, string> = { full: 'Journée', am: 'Matin', pm: 'Après-midi' };
@@ -24,6 +24,7 @@ export const sortEntries = (es: WorkDay[]) => es.slice().sort((a, b) => SLOT_ORD
 export interface Index {
   days: Map<string, WorkDay[]>;
   rests: Map<string, Rest>;
+  events: Map<string, PersonalEvent[]>;
 }
 export function indexPlanning(p: Planning): Index {
   const days = new Map<string, WorkDay[]>();
@@ -32,7 +33,13 @@ export function indexPlanning(p: Planning): Index {
     if (l) l.push(d); else days.set(d.date, [d]);
   }
   for (const [k, l] of days) days.set(k, sortEntries(l));
-  return { days, rests: new Map(p.rests.map(r => [r.date, r])) };
+  const events = new Map<string, PersonalEvent[]>();
+  for (const e of p.events ?? []) {
+    const l = events.get(e.date);
+    if (l) l.push(e); else events.set(e.date, [e]);
+  }
+  for (const [k, l] of events) events.set(k, l.slice().sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot]));
+  return { days, rests: new Map(p.rests.map(r => [r.date, r])), events };
 }
 
 /** Jours au total / faits (jusqu'à aujourd'hui inclus) / prévus, entre deux dates incluses. */
@@ -102,3 +109,17 @@ export function legendCabinets(cabs: Cabinet[], days: WorkDay[], from: string, t
 export function futureDays(days: WorkDay[], cabId: string, today = todayKey()): number {
   return days.filter(d => d.cabinetId === cabId && d.date > today).reduce((s, d) => s + slotValue(d.slot), 0);
 }
+
+/**
+ * Ligne « rendez-vous perso » en haut d'une case : toute la largeur si un rendez-vous dure la journée
+ * ou s'il y en a le matin et l'après-midi ; sinon la moitié gauche (matin) ou droite (après-midi).
+ */
+export function eventLine(evs: Pick<PersonalEvent, 'slot'>[]): Slot | null {
+  if (!evs.length) return null;
+  const am = evs.some(e => e.slot === 'am'), pm = evs.some(e => e.slot === 'pm');
+  if (evs.some(e => e.slot === 'full') || (am && pm)) return 'full';
+  return am ? 'am' : 'pm';
+}
+
+/** Texte d'un rendez-vous perso : « Matin · Garage ». */
+export const eventText = (e: Pick<PersonalEvent, 'slot' | 'label'>) => `${SLOT_LABEL[e.slot]} · ${e.label}`;

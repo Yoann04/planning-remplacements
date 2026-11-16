@@ -20,11 +20,11 @@ la **simplicité** et la **justesse des règles**, pas la montée en charge.
 
 | Dossier | Rôle |
 |---|---|
-| `Entity/` | Modèle Doctrine : `User`, `Cabinet`, `Nurse`, `WorkDay`, `Rest`, `Note`, `SchoolHoliday`, `UndoLog`. Chaque ligne métier a un `owner`. |
+| `Entity/` | Modèle Doctrine : `User`, `Cabinet`, `Nurse`, `WorkDay`, `Rest`, `Note`, `PersonalEvent`, `SchoolHoliday`, `UndoLog`. Chaque ligne métier a un `owner`. |
 | `Enum/` | `Slot` (full / am / pm, avec `value()` = 1 ou 0,5 et `overlaps()`), `NoteScope`, `VacationZone`. |
 | `Dto/` | Corps de requête typés et validés (`#[MapRequestPayload]` + contraintes Validator, messages en français). |
 | `Controller/` | Fins : lisent l'utilisateur connecté, appellent un service, renvoient du JSON. |
-| `Service/` | Les règles : `PlanningService` (jours et repos), `CabinetService`, `NoteService`, `StatsService`, `UndoService`, `PlanningSnapshot`. |
+| `Service/` | Les règles : `PlanningService` (jours et repos), `CabinetService`, `NoteService`, `EventService` (rendez-vous perso), `StatsService`, `UndoService`, `PlanningSnapshot`. |
 | `Repository/` | Requêtes, toujours filtrées par propriétaire (`findOwned`). |
 | `EventSubscriber/ApiExceptionSubscriber` | Toute erreur `/api` devient `{"error": "message en français"}` avec le bon code (422, 404…). |
 | `Command/` | `app:user:create` (pas d'inscription publique), `app:holidays:import`. |
@@ -40,6 +40,9 @@ la **simplicité** et la **justesse des règles**, pas la montée en charge.
 - **Cabinet en veille** (`Cabinet::active = false`, remplacement terminé) : il ne reçoit plus de nouveau jour (422), y compris
   en y déplaçant un jour d'un autre cabinet ; ses jours déjà placés restent modifiables et supprimables, et comptent toujours
   dans les compteurs. Mise en veille et réactivation par `PUT /api/cabinets/{id}/active`, annulables. Rien n'est supprimé.
+- **Rendez-vous perso** (`PersonalEvent` : date, journée / matin / après-midi, texte, « RDV perso » par défaut) : simple information.
+  Plusieurs par jour, aucune interaction avec les jours de cabinet ni les repos (rien n'est refusé ni retiré), hors compteurs.
+  `POST /api/events` (plusieurs dates), `PUT` / `DELETE /api/events/{id}`, tous annulables.
 
 ### Annuler (après chaque modification)
 
@@ -93,6 +96,10 @@ Migration MySQL / MariaDB (`migrations/Version20261113000000.php`). Index `(owne
 - **Styles du prototype repris tels quels** (`styles.css`) : le prototype validé fait foi, on n'a pas réinterprété le design. Thème clair / sombre automatique.
 - **« Mon activité »** affiche les compteurs calculés par l'API (`/api/stats`, rechargés via `resource()` quand le planning change) ; le calendrier calcule ses petits totaux localement avec les mêmes règles.
 - **Glisser pour sélectionner** (mode « Ajouter des jours ») : évènements *pointer* + `setPointerCapture` + `elementFromPoint`, `touch-action: none` sur la grille. **Jamais testé sur un vrai iPhone** : à vérifier à l'étape 4.
+- **Rendez-vous perso** : choix « RDV perso » à côté de « Repos voulu » partout où l'on ajoute (mode ajout, fenêtre d'ajout,
+  « Ajouter un cabinet » de la vue jour). Repère : ligne fuchsia en haut des cases (mois, semaine, année ; moitié gauche = matin,
+  droite = après-midi, fonction pure `eventLine()`). Toucher une case qui en a un affiche un avertissement à valider avec « OK »
+  (`UiState.notify`), puis le geste continue normalement ; en glissant sur plusieurs jours, un seul avertissement liste les jours.
 - **Balayer pour changer de période** (calendrier) : `touchstart` / `touchend` sur la zone qui défile, décision dans
   `swipeStep()` (60 px minimum, geste nettement horizontal, 20 px de bord laissés au geste « retour » d'iOS, ignoré en mode
   ajout, avec une fenêtre ouverte et dans « Mon activité »). `touch-action: pan-y pinch-zoom` laisse au navigateur le défilement
@@ -101,6 +108,6 @@ Migration MySQL / MariaDB (`migrations/Version20261113000000.php`). Index `(owne
 
 ## Tests
 
-- API : 36 tests PHPUnit (fonctionnels via HTTP + unitaires), base SQLite recréée à chaque lancement, horloge figée au 15/11/2026 pour tester « faits / prévus ».
+- API : 41 tests PHPUnit (fonctionnels via HTTP + unitaires), base SQLite recréée à chaque lancement, horloge figée au 15/11/2026 pour tester « faits / prévus ».
   La migration elle-même est vérifiée à la main sur MySQL (les tests construisent le schéma depuis les entités).
-- Front : 27 tests Vitest sur les fonctions pures.
+- Front : 30 tests Vitest sur les fonctions pures.

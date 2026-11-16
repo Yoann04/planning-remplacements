@@ -11,6 +11,7 @@ import { legendCabinets } from '../core/rules';
     <div class="legend">
       @for (c of cabs(); track c.id) { <span class="kc" [style.--kc]="c.color"><i class="sw"></i>{{ c.name }}</span> }
       <span><i class="sw rest"></i>Repos voulu</span>
+      <span><i class="sw perso"></i>Rendez-vous perso</span>
       <span><i class="sw fer"></i>Jour férié</span>
       @if (store.zone() !== 'none') { <span><i class="sw vac"></i>Vacances scolaires (zone {{ store.zone() }})</span> }
     </div>`,
