@@ -289,3 +289,6 @@ button:disabled{opacity:.55;cursor:default}
 .notice{position:fixed;z-index:60;left:16px;right:16px;top:50%;transform:translateY(-50%);max-width:420px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--perso);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 50px -10px rgba(0,0,0,.45)}
 .notice p{font-size:17px;font-weight:600}
 .notice .btn{margin-top:6px}
+/* « Nouvelle version disponible » (mise à jour de l'application installée) */
+.update{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:40;width:calc(100% - 32px);max-width:440px;background:var(--ink);color:var(--onink);border-radius:16px;padding:10px 10px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px;font-weight:600;box-shadow:0 12px 30px -10px rgba(0,0,0,.45)}
+.update button{flex:none;height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--onink);color:var(--ink);font:inherit;font-weight:700}

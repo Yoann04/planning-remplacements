@@ -5,6 +5,7 @@ import { DayView } from './calendar/day-view';
 import { MonthView } from './calendar/month-view';
 import { WeekView } from './calendar/week-view';
 import { YearView } from './calendar/year-view';
+import { AppUpdate } from './core/app-update';
 import { AuthService } from './core/auth.service';
 import { PlanningStore } from './core/planning.store';
 import { Point, swipeStep } from './core/swipe';
@@ -42,6 +43,9 @@ import { SheetHost } from './shell/sheet-host';
       </main>
       @if (auth.loggedIn() && store.loaded()) { <app-bottom-bars /> }
     </div>
+    @if (update.ready()) {
+      <div class="update" role="status"><span>Nouvelle version disponible</span><button (click)="update.apply()">Mettre à jour</button></div>
+    }
     <div id="toast" role="status" aria-live="polite">
       @if (ui.toastState(); as t) {
         <div class="toast"><span>{{ t.msg }}</span>@if (t.undoId) { <button (click)="store.undo(t.undoId)">Annuler</button> }</div>
@@ -61,6 +65,7 @@ export class App {
   protected auth = inject(AuthService);
   protected store = inject(PlanningStore);
   protected ui = inject(UiState);
+  protected update = inject(AppUpdate);
   private main = viewChild.required<ElementRef<HTMLElement>>('main');
   /** Point de départ du doigt pour le balayage (un seul doigt). */
   protected swipeFrom: Point | null = null;
