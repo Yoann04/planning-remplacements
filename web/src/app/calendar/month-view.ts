@@ -43,7 +43,7 @@ import { ViewSwitch } from '../shared/view-switch';
     <div class="sum"><strong>{{ jours(totals().total) }}</strong><span>{{ num(totals().done) }} fait{{ totals().done >= 2 ? 's' : '' }} · {{ num(totals().todo) }} prévu{{ totals().todo >= 2 ? 's' : '' }}</span></div>
     @if (ui.add(); as a) {
       <section class="panel" aria-label="Ajouter des jours">
-        <app-pickers [state]="a" [allowRest]="true" [allowPerso]="true" [allowNewCabinet]="true" [addMode]="true" (change)="setAdd($event)" (newCabinet)="ui.openSheet({ type: 'cab', id: null, ret: 'add' })" />
+        <app-pickers [state]="a" [allowRest]="true" [allowPerso]="true" [allowNewCabinet]="true" [addMode]="true" (picked)="setAdd($event)" (newCabinet)="ui.openSheet({ type: 'cab', id: null, ret: 'add' })" />
         @if (!a.rest && !a.perso) { <p class="hint">Touchez un jour pour l'ajouter, ou glissez le doigt sur plusieurs jours puis validez.</p> }
       </section>
     } @else if (!store.cabinets().length) {
@@ -83,7 +83,7 @@ export class MonthView {
         + (evs.length ? ' · rendez-vous perso : ' + evs.map(eventText).join(', ') : '');
       const ev = eventLine(evs);
       const cls = 'cell' + (k === today ? ' today' : '') + (r === 'full' && !es.length ? ' rest' : '') + (r && r !== 'full' ? ' rest-' + r : '') + (va ? ' vac' : '') + (ev ? ' ev-' + ev : '');
-      return { k, day: d.getDate(), out: false, entries: es, cls, label, fe, empty: !es.length && !r };
+      return { k, day: d.getDate(), out: false, entries: es, cls, label, fe, empty: !es.length && !r && !evs.length };
     });
   });
 

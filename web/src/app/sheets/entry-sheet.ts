@@ -20,7 +20,7 @@ import { DeleteBlock, SheetHead } from './sheet-head';
     } @else {
       <app-sheet-head [title]="title()" />
       <p class="sub">{{ sub() }}</p>
-      <app-pickers [state]="st()" [allowRest]="!!dates()" [allowPerso]="!id()" [keepCab]="keepCab" (change)="st.set($event); err.set('')" />
+      <app-pickers [state]="st()" [allowRest]="!!dates()" [allowPerso]="!id()" [keepCab]="keepCab" (picked)="st.set($event); err.set('')" (done)="save()" />
       @if (err()) { <p class="err" role="alert">{{ err() }}</p> }
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn primary big" [disabled]="actions.busy()" (click)="save()">{{ dates() ? 'Ajouter' : 'Enregistrer' }}</button>
