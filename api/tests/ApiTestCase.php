@@ -25,7 +25,7 @@ abstract class ApiTestCase extends WebTestCase
         static::mockTime('2026-11-15 10:00:00 Europe/Paris');
         static::getContainer()->get('cache.rate_limiter')->clear(); // compteur d'essais de connexion remis à zéro
         $conn = $this->em()->getConnection();
-        foreach (['undo_log', 'note', 'rest', 'work_day', 'nurse', 'cabinet', 'school_holiday', 'app_user'] as $t) {
+        foreach (['undo_log', 'personal_event', 'note', 'rest', 'work_day', 'nurse', 'cabinet', 'school_holiday', 'app_user'] as $t) {
             $conn->executeStatement("DELETE FROM $t");
         }
     }

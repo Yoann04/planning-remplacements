@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\User;
 use App\Repository\CabinetRepository;
 use App\Repository\NoteRepository;
+use App\Repository\PersonalEventRepository;
 use App\Repository\NurseRepository;
 use App\Repository\RestRepository;
 use App\Repository\WorkDayRepository;
@@ -21,6 +22,7 @@ final readonly class PlanningSnapshot
         private WorkDayRepository $days,
         private RestRepository $rests,
         private NoteRepository $notes,
+        private PersonalEventRepository $events,
     ) {
     }
 
@@ -35,6 +37,7 @@ final readonly class PlanningSnapshot
             'days' => $rows($this->days->findAllFor($user)),
             'rests' => $rows($this->rests->findAllFor($user)),
             'notes' => $rows($this->notes->findAllFor($user)),
+            'events' => $rows($this->events->findAllFor($user)),
         ];
     }
 }

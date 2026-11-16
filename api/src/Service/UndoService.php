@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Cabinet;
 use App\Entity\Note;
 use App\Entity\Nurse;
+use App\Entity\PersonalEvent;
 use App\Entity\Rest;
 use App\Entity\UndoLog;
 use App\Entity\User;
@@ -14,6 +15,7 @@ use App\Enum\Slot;
 use App\Repository\CabinetRepository;
 use App\Repository\NoteRepository;
 use App\Repository\NurseRepository;
+use App\Repository\PersonalEventRepository;
 use App\Repository\RestRepository;
 use App\Repository\UndoLogRepository;
 use App\Repository\WorkDayRepository;
@@ -41,6 +43,7 @@ final class UndoService
         private readonly WorkDayRepository $days,
         private readonly RestRepository $rests,
         private readonly NoteRepository $notes,
+        private readonly PersonalEventRepository $events,
         private readonly Today $today,
     ) {
     }
@@ -50,7 +53,7 @@ final class UndoService
         return ['op' => 'delete', 'type' => $type, 'id' => $id->toRfc4122()];
     }
 
-    public static function put(Cabinet|Nurse|WorkDay|Rest|Note $entity): array
+    public static function put(Cabinet|Nurse|WorkDay|Rest|Note|PersonalEvent $entity): array
     {
         $type = match (true) {
             $entity instanceof Cabinet => 'cabinet',
@@ -58,6 +61,7 @@ final class UndoService
             $entity instanceof WorkDay => 'workday',
             $entity instanceof Rest => 'rest',
             $entity instanceof Note => 'note',
+            $entity instanceof PersonalEvent => 'event',
         };
 
         return ['op' => 'put', 'type' => $type, 'data' => $entity->toArray()];
@@ -149,6 +153,11 @@ final class UndoService
                 }
                 $onDate ? $onDate->setSlot(Slot::from($d['slot'])) : $this->em->persist(new Rest($user, $date, Slot::from($d['slot']), $id));
                 break;
+            case 'event':
+                $existing
+                    ? $existing->update(Slot::from($d['slot']), $d['label'])
+                    : $this->em->persist(new PersonalEvent($user, Dates::parse($d['date']), Slot::from($d['slot']), $d['label'], $id));
+                break;
             case 'note':
                 if ($existing) {
                     $existing->setText($d['text']);
@@ -167,7 +176,7 @@ final class UndoService
         $this->em->flush();
     }
 
-    private function repo(string $type): CabinetRepository|NurseRepository|WorkDayRepository|RestRepository|NoteRepository
+    private function repo(string $type): CabinetRepository|NurseRepository|WorkDayRepository|RestRepository|NoteRepository|PersonalEventRepository
     {
         return match ($type) {
             'cabinet' => $this->cabinets,
@@ -175,6 +184,7 @@ final class UndoService
             'workday' => $this->days,
             'rest' => $this->rests,
             'note' => $this->notes,
+            'event' => $this->events,
         };
     }
 }
