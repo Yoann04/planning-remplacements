@@ -34,6 +34,8 @@ h1,h2,h3,p{margin:0}
 #app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column}
 #main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:8px 0 16px;display:flex;flex-direction:column;gap:12px}
 #main>*{flex:none}
+/* Calendrier : le balayage horizontal change de période ; le défilement vertical et le zoom restent au navigateur. */
+#main.swipe{touch-action:pan-y pinch-zoom}
 #bar{flex:none}
 #nav{flex:none}
 

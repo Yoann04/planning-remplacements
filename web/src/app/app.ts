@@ -7,6 +7,7 @@ import { WeekView } from './calendar/week-view';
 import { YearView } from './calendar/year-view';
 import { AuthService } from './core/auth.service';
 import { PlanningStore } from './core/planning.store';
+import { Point, swipeStep } from './core/swipe';
 import { UiState } from './core/ui.state';
 import { BottomBars } from './shell/bottom-bars';
 import { Login } from './shell/login';
@@ -19,7 +20,8 @@ import { SheetHost } from './shell/sheet-host';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div id="app">
-      <main id="main" #main>
+      <main id="main" #main [class.swipe]="ui.tab() === 'cal'"
+            (touchstart)="swipeStart($event)" (touchend)="swipeEnd($event)" (touchcancel)="swipeFrom = null">
         @if (!auth.loggedIn()) {
           <app-login />
         } @else if (!store.loaded()) {
@@ -52,6 +54,8 @@ export class App {
   protected store = inject(PlanningStore);
   protected ui = inject(UiState);
   private main = viewChild.required<ElementRef<HTMLElement>>('main');
+  /** Point de départ du doigt pour le balayage (un seul doigt). */
+  protected swipeFrom: Point | null = null;
 
   constructor() {
     // Connexion → chargement du planning ; déconnexion (ou jeton expiré) → tout est vidé.
@@ -67,5 +71,25 @@ export class App {
       const y = this.ui.scrollTo();
       if (y !== null) { this.main().nativeElement.scrollTop = y; this.ui.scrollTo.set(null); }
     });
+  }
+
+  protected swipeStart(e: TouchEvent): void {
+    this.swipeFrom = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }
+
+  /** Balayage horizontal dans le calendrier : même effet que les flèches précédent / suivant. */
+  protected swipeEnd(e: TouchEvent): void {
+    const from = this.swipeFrom, t = e.changedTouches[0];
+    this.swipeFrom = null;
+    if (!from || !t) return;
+    const step = swipeStep(from, { x: t.clientX, y: t.clientY }, window.innerWidth,
+      { tab: this.ui.tab(), sheetOpen: !!this.ui.sheet(), adding: !!this.ui.add() });
+    if (!step) return;
+    this.ui.nav(step);
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.main().nativeElement.animate(
+        [{ transform: `translateX(${step * 36}px)`, opacity: 0.4 }, { transform: 'none', opacity: 1 }],
+        { duration: 180, easing: 'ease-out' });
+    }
   }
 }
