@@ -292,3 +292,8 @@ button:disabled{opacity:.55;cursor:default}
 /* « Nouvelle version disponible » (mise à jour de l'application installée) */
 .update{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:40;width:calc(100% - 32px);max-width:440px;background:var(--ink);color:var(--onink);border-radius:16px;padding:10px 10px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px;font-weight:600;box-shadow:0 12px 30px -10px rgba(0,0,0,.45)}
 .update button{flex:none;height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--onink);color:var(--ink);font:inherit;font-weight:700}
+/* Cube qui roule (changement de période) : copie figée de l'ancienne page, mêmes règles de mise en page que #main */
+.cube-old{position:fixed;z-index:5;overflow:hidden;pointer-events:none;padding:8px 0 16px;display:flex;flex-direction:column;gap:12px;background:var(--bg);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.cube-old>*{flex:none}
+.cube-old>*>*{flex-shrink:0}
+#main.cube-new{background:var(--bg);backface-visibility:hidden;-webkit-backface-visibility:hidden}

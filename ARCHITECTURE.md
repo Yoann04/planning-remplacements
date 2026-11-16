@@ -104,6 +104,10 @@ Migration MySQL / MariaDB (`migrations/Version20261113000000.php`). Index `(owne
   `swipeStep()` (60 px minimum, geste nettement horizontal, 20 px de bord laissés au geste « retour » d'iOS, ignoré en mode
   ajout, avec une fenêtre ouverte et dans « Mon activité »). `touch-action: pan-y pinch-zoom` laisse au navigateur le défilement
   vertical et le zoom. Même effet que les flèches. **À vérifier sur un vrai iPhone.**
+- **Animation « cube qui roule »** (`core/page-turn.ts`, flèches et balayage du calendrier) : une copie figée de la page
+  actuelle et la nouvelle page sont deux faces d'un cube qui tourne (Web Animations, 380 ms). Pas d'animation dans
+  « Mon activité », avec le réglage « réduire les animations », ni si une animation est déjà en cours ; la copie est
+  toujours retirée (fin d'animation ou, par sécurité, après 680 ms).
 - **Mises à jour de l'application installée** (`core/app-update.ts`) : quand le service worker a téléchargé une nouvelle version, un bandeau « Nouvelle version disponible · Mettre à jour » s'affiche ; l'utilisatrice choisit quand recharger (jamais au milieu d'une saisie). Vérification à l'ouverture, au retour au premier plan (iPhone) et toutes les 30 minutes.
 - **PWA** : manifeste, icônes, service worker Angular (coquille hors ligne ; les données passent toujours par l'API, `/api` exclu du cache).
 

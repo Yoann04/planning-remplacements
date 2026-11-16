@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, afterRenderEffect, effect, inject, viewChild } from '@angular/core';
 import { ActivityView } from './activity/activity-view';
 import { CabinetView } from './activity/cabinet-view';
 import { DayView } from './calendar/day-view';
@@ -7,6 +7,7 @@ import { WeekView } from './calendar/week-view';
 import { YearView } from './calendar/year-view';
 import { AppUpdate } from './core/app-update';
 import { AuthService } from './core/auth.service';
+import { PageTurn } from './core/page-turn';
 import { PlanningStore } from './core/planning.store';
 import { Point, swipeStep } from './core/swipe';
 import { UiState } from './core/ui.state';
@@ -66,6 +67,7 @@ export class App {
   protected store = inject(PlanningStore);
   protected ui = inject(UiState);
   protected update = inject(AppUpdate);
+  private turn = inject(PageTurn);
   private main = viewChild.required<ElementRef<HTMLElement>>('main');
   /** Point de départ du doigt pour le balayage (un seul doigt). */
   protected swipeFrom: Point | null = null;
@@ -81,6 +83,7 @@ export class App {
     // Le message du bas remonte au-dessus de la barre de sélection.
     effect(() => document.body.classList.toggle('adding', !!this.ui.add() || this.ui.pick().length > 0));
     this.ui.scrollTop = () => this.main().nativeElement.scrollTop;
+    afterNextRender(() => (this.turn.main = this.main().nativeElement));
     // Défilement demandé par l'état (haut de page à chaque changement d'écran, position d'origine pour « Retour »).
     afterRenderEffect(() => {
       const y = this.ui.scrollTo();
@@ -100,11 +103,6 @@ export class App {
     const step = swipeStep(from, { x: t.clientX, y: t.clientY }, window.innerWidth,
       { tab: this.ui.tab(), sheetOpen: !!this.ui.sheet(), adding: !!this.ui.add() });
     if (!step) return;
-    this.ui.nav(step);
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.main().nativeElement.animate(
-        [{ transform: `translateX(${step * 36}px)`, opacity: 0.4 }, { transform: 'none', opacity: 1 }],
-        { duration: 180, easing: 'ease-out' });
-    }
+    this.turn.go(step);
   }
 }

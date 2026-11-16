@@ -56,3 +56,11 @@ Besoin réel : **ne pas accepter un remplacement le jour d'un rendez-vous perso*
 - **Choix** : un bandeau « Nouvelle version disponible » avec « Mettre à jour », plutôt qu'un rechargement automatique qui pourrait couper une saisie en cours. Vérification à l'ouverture (faite par le service worker), au retour au premier plan (`visibilitychange` : sur iPhone, l'application reste ouverte en arrière-plan) et toutes les 30 minutes. Copie locale abîmée (`unrecoverable`) : rechargement direct.
 - **Test** : le navigateur intégré de l'outil n'accepte pas de service worker ; test fait dans un Chrome sans interface (profil temporaire) avec deux versions successives servies en local : bandeau affiché en 1 s au retour au premier plan et en 4 s à la réouverture, puis plus de bandeau après « Mettre à jour » (3 essais + 2 essais). La toute première mise à jour ne profitera pas du bandeau : il faut encore fermer et rouvrir l'application une ou deux fois pour recevoir cette version.
 
+## 16/11/2026 — animation « cube qui roule »
+
+- Six animations proposées à Yoann sur une maquette interactive (glissement, glissement qui suit le doigt, page qui tourne, cube, pile de cartes, fondu). **Choix de Yoann : le cube**, pour les vues année, mois, semaine et jour, au balayage comme aux flèches.
+- Réalisation : au changement de période, copie figée (clone du DOM) de la page actuelle posée par-dessus, puis les deux faces tournent de 90° autour de l'axe du cube (`perspective · translateZ(-l/2) · rotateY · translateZ(l/2)`). 380 ms, pour ne pas ralentir la consultation. Remplace le petit glissement du 16/11.
+- Pas d'animation : dans « Mon activité » (flèches du mois / de l'année), si l'iPhone demande moins d'animations (changement direct), ou si un cube tourne déjà (le geste suivant change de période sans animation, rien n'est perdu).
+- Sécurité : si l'animation est suspendue (application passée en arrière-plan en plein mouvement, page masquée), la copie est retirée au bout de 680 ms quoi qu'il arrive.
+- Vérifié dans le navigateur (mi-parcours figé, quatre vues, double clic, balayage, « Mon activité », réglage « réduire les animations »). Fluidité à confirmer sur l'iPhone.
+
