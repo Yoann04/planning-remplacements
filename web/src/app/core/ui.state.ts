@@ -37,6 +37,8 @@ export class UiState {
   readonly actCab = signal<string | null>(null);
   readonly cabPeriod = signal<'month' | 'year'>('month');
   readonly cabNurse = signal<string>('all');
+  /** Section « Cabinets en veille » de Mon activité dépliée. */
+  readonly standbyOpen = signal(false);
   /** Défilement à appliquer à la zone principale après le prochain affichage (0 = haut de page). */
   readonly scrollTo = signal<number | null>(null);
   scrollTop = () => 0;

@@ -21,6 +21,7 @@ use Doctrine\ORM\EntityManagerInterface;
  *  - Une journée de repos exclut tout cabinet ; une demi-journée de repos peut coexister avec un cabinet sur l'autre moitié.
  *  - Ajouter un cabinet qui chevauche un repos retire le repos (annulable).
  *  - Ajouter un repos sur une période déjà occupée par un cabinet est refusé.
+ *  - Un cabinet en veille ne reçoit plus de nouveaux jours ; ses jours déjà placés restent modifiables.
  *
  * Chaque méthode renvoie un résumé et l'identifiant d'annulation.
  */
@@ -56,6 +57,7 @@ final class PlanningService
      */
     public function addDays(User $user, array $dates, Cabinet $cabinet, ?Nurse $nurse, Slot $slot): array
     {
+        $this->checkActive($cabinet);
         $this->checkNurse($cabinet, $nurse);
         $ops = [];
         $added = $duplicates = $restsRemoved = 0;
@@ -81,6 +83,9 @@ final class PlanningService
     /** @return array{restRemoved: bool, undoId: ?string} */
     public function updateDay(User $user, WorkDay $day, Cabinet $cabinet, ?Nurse $nurse, Slot $slot): array
     {
+        if ($day->getCabinet() !== $cabinet) {
+            $this->checkActive($cabinet); // déplacer un jour vers un cabinet en veille = nouveau jour dans ce cabinet
+        }
         $this->checkNurse($cabinet, $nurse);
         $ops = [UndoService::put($day)];
         $day->assign($cabinet, $nurse, $slot);
@@ -150,6 +155,13 @@ final class PlanningService
         $this->em->remove($rest);
 
         return ['undoId' => $this->save($user, $ops)];
+    }
+
+    private function checkActive(Cabinet $cabinet): void
+    {
+        if (!$cabinet->isActive()) {
+            throw new BusinessRuleException('Ce cabinet est en veille : réactivez-le dans sa fiche pour y ajouter des jours.');
+        }
     }
 
     /** L'infirmière doit appartenir au cabinet, et elle est obligatoire si le cabinet en a. */

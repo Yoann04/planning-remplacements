@@ -83,3 +83,22 @@ export function cabinetNotes(p: Pick<Planning, 'nurses' | 'notes'>, cabId: strin
   }
   return out;
 }
+
+/**
+ * Cabinets proposés pour ajouter un jour : les cabinets actifs. Un cabinet en veille n'est gardé que s'il est
+ * déjà celui du jour qu'on modifie (keepId), pour pouvoir modifier ce jour sans le changer de cabinet.
+ */
+export function addChoices(cabs: Cabinet[], keepId: string | null = null): Cabinet[] {
+  return cabs.filter(c => c.active || c.id === keepId);
+}
+
+/** Légende du calendrier : les cabinets (actifs ou en veille) qui ont au moins un jour dans la période visible. */
+export function legendCabinets(cabs: Cabinet[], days: WorkDay[], from: string, to: string): Cabinet[] {
+  const used = new Set(days.filter(d => d.date >= from && d.date <= to).map(d => d.cabinetId));
+  return cabs.filter(c => used.has(c.id));
+}
+
+/** Jours encore prévus (après aujourd'hui) dans un cabinet, en jours (demi-journée = 0,5). */
+export function futureDays(days: WorkDay[], cabId: string, today = todayKey()): number {
+  return days.filter(d => d.cabinetId === cabId && d.date > today).reduce((s, d) => s + slotValue(d.slot), 0);
+}

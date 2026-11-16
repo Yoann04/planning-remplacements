@@ -117,7 +117,12 @@ final class UndoService
 
         switch ($type) {
             case 'cabinet':
-                $existing ? $existing->update($d['name'], $d['code'], $d['color']) : $this->em->persist(new Cabinet($user, $d['name'], $d['code'], $d['color'], $id));
+                if (!$existing) {
+                    $existing = new Cabinet($user, $d['name'], $d['code'], $d['color'], $id);
+                    $this->em->persist($existing);
+                }
+                $existing->update($d['name'], $d['code'], $d['color']);
+                $existing->setActive($d['active'] ?? true); // les annulations notées avant le 16/11 n'ont pas ce champ
                 break;
             case 'nurse':
                 if ($existing) {

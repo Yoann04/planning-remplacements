@@ -29,9 +29,9 @@ final class NoteController extends ApiController
     #[Route('/{id}', methods: ['PUT'])]
     public function update(string $id, #[MapRequestPayload] NoteTextInput $in): JsonResponse
     {
-        $this->service->update($this->found($this->notes->findOwned($this->me(), $id), 'Pense-bête introuvable.'), $in->text);
+        $user = $this->me();
 
-        return $this->withPlanning();
+        return $this->withPlanning($this->service->update($user, $this->found($this->notes->findOwned($user, $id), 'Pense-bête introuvable.'), $in->text));
     }
 
     #[Route('/{id}', methods: ['DELETE'])]

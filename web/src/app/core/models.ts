@@ -3,7 +3,8 @@ export type Slot = 'full' | 'am' | 'pm';
 export type Zone = 'A' | 'B' | 'C' | 'none';
 export type NoteScope = 'day' | 'cabinet' | 'nurse';
 
-export interface Cabinet { id: string; name: string; code: string; color: string }
+/** active = false : cabinet « en veille » (remplacement terminé), absent des choix d'ajout ; ses jours restent. */
+export interface Cabinet { id: string; name: string; code: string; color: string; active: boolean }
 export interface Nurse { id: string; cabinetId: string; name: string }
 export interface WorkDay { id: string; date: string; cabinetId: string; nurseId: string | null; slot: Slot }
 export interface Rest { id: string; date: string; slot: Slot }

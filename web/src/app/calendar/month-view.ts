@@ -50,7 +50,7 @@ import { ViewSwitch } from '../shared/view-switch';
       <div class="empty"><p><strong>Aucun cabinet pour l'instant.</strong> Créez votre premier cabinet, puis ajoutez vos jours.</p>
         <button class="btn primary" (click)="ui.openSheet({ type: 'cab', id: null, ret: null })"><app-icon name="plus" [stroke]="2.6" />Créer un cabinet</button></div>
     } @else {
-      <app-legend />
+      <app-legend [range]="range()" />
       <p class="hint">Touchez un jour vide pour le sélectionner (vous pouvez en choisir plusieurs), puis « Ajouter ». Touchez un jour déjà rempli pour le modifier.</p>
       @if (!ui.pick().length) { <button class="btn primary big" (click)="ui.startAdd()"><app-icon name="plus" [stroke]="2.6" />Ajouter des jours</button> }
     }`,
@@ -66,7 +66,8 @@ export class MonthView {
   private dragSet = computed(() => { const d = this.drag(); return d ? new Set(rangeKeys(d.a, d.b)) : null; });
 
   protected title = computed(() => cap(MONTHS[this.ui.cur().getMonth()]) + ' ' + this.ui.cur().getFullYear());
-  protected totals = computed(() => { const [f, t] = monthRange(this.ui.cur()); return dayTotals(this.store.planning().days, f, t); });
+  protected range = computed(() => monthRange(this.ui.cur()));
+  protected totals = computed(() => { const [f, t] = this.range(); return dayTotals(this.store.planning().days, f, t); });
 
   protected cells = computed(() => {
     const cur = this.ui.cur(), y = cur.getFullYear(), m = cur.getMonth(), today = todayKey();

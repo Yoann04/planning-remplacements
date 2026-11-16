@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, resource } from '@angular/core';
 import { ApiService } from '../core/api.service';
 import { MONTHS, cap, monthRange, yearRange } from '../core/dates';
@@ -11,7 +12,7 @@ import { Icon } from '../shared/icon';
 /** « Mon activité » : compteurs calculés par l'API (/api/stats) pour le mois, l'année ou depuis le début. */
 @Component({
   selector: 'app-activity-view',
-  imports: [Head, Icon, DatePickers],
+  imports: [Head, Icon, DatePickers, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display:contents' },
   template: `
@@ -31,8 +32,22 @@ import { Icon } from '../shared/icon';
         <div class="tile w3"><b>{{ num(s?.rests?.todo ?? 0) }}</b><span>repos prévus</span></div>
       </div>
       <h2>Par cabinet</h2>
-      @for (c of cards(); track c.id) {
-        <button class="cabcard kc" [style.--kc]="c.color" (click)="ui.openCabinet(c.id)" [attr.aria-label]="'Voir le détail de ' + c.name">
+      @for (c of active(); track c.id) { <ng-container *ngTemplateOutlet="card; context: { $implicit: c }" /> }
+      @empty {
+        <div class="empty"><p>{{ standby().length ? 'Aucun cabinet actif. Réactivez un cabinet en veille, ou ajoutez-en un avec le bouton « Un cabinet ».' : 'Aucun cabinet. Ajoutez le premier avec le bouton « Un cabinet ».' }}</p></div>
+      }
+      <button class="btn primary" (click)="ui.openSheet({ type: 'cab', id: null, ret: null })"><app-icon name="plus" [stroke]="2.6" />Un cabinet</button>
+      @if (standby().length) {
+        <button class="btn standby-t" [attr.aria-expanded]="ui.standbyOpen()" (click)="ui.standbyOpen.set(!ui.standbyOpen())">
+          <span>Cabinets en veille ({{ standby().length }})</span><app-icon [name]="ui.standbyOpen() ? 'up' : 'down'" [size]="20" />
+        </button>
+        @if (ui.standbyOpen()) {
+          <p class="hint">Remplacements terminés : ils ne sont plus proposés pour ajouter des jours. Leurs jours et leurs compteurs restent.</p>
+          @for (c of standby(); track c.id) { <ng-container *ngTemplateOutlet="card; context: { $implicit: c }" /> }
+        }
+      }
+      <ng-template #card let-c>
+        <button class="cabcard kc" [class.asleep]="!c.active" [style.--kc]="c.color" (click)="ui.openCabinet(c.id)" [attr.aria-label]="'Voir le détail de ' + c.name">
           <div class="top"><span class="chip lg">{{ c.code }}</span><b>{{ c.name }}</b><em>{{ num(c.total) }} j</em><span class="go"><app-icon name="go" [size]="18" /></span></div>
           <div class="bar"><i [style.width.%]="c.pct"></i></div>
           <div class="nl">
@@ -40,10 +55,7 @@ import { Icon } from '../shared/icon';
           </div>
           @if (c.note) { <div class="notep"><app-icon name="note" [size]="18" [stroke]="2" /><span>{{ c.note }}</span></div> }
         </button>
-      } @empty {
-        <div class="empty"><p>Aucun cabinet. Ajoutez le premier avec le bouton « Un cabinet ».</p></div>
-      }
-      <button class="btn primary" (click)="ui.openSheet({ type: 'cab', id: null, ret: null })"><app-icon name="plus" [stroke]="2.6" />Un cabinet</button>
+      </ng-template>
       @if (ui.period() !== 'month' && months().length) {
         <h2>Par mois</h2>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -84,6 +96,9 @@ export class ActivityView {
       };
     });
   });
+
+  protected active = computed(() => this.cards().filter(c => c.active));
+  protected standby = computed(() => this.cards().filter(c => !c.active));
 
   protected months = computed(() => {
     const ms = this.stats.value()?.months ?? {}, ks = Object.keys(ms).sort(), max = Math.max(1, ...ks.map(k => ms[k]));

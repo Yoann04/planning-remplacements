@@ -7,7 +7,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
-/** Cabinet infirmier où l'utilisatrice fait des remplacements. Nom, initiales et couleur sont libres. */
+/**
+ * Cabinet infirmier où l'utilisatrice fait des remplacements. Nom, initiales et couleur sont libres.
+ * Un cabinet « en veille » (remplacement terminé) garde ses jours et ses compteurs, mais ne reçoit plus de nouveaux jours.
+ */
 #[ORM\Entity(repositoryClass: CabinetRepository::class)]
 class Cabinet
 {
@@ -27,6 +30,9 @@ class Cabinet
 
     #[ORM\Column(length: 7)]
     private string $color;
+
+    #[ORM\Column(options: ['default' => true])]
+    private bool $active = true;
 
     public function __construct(User $owner, string $name, string $code, string $color, ?Uuid $id = null)
     {
@@ -67,9 +73,19 @@ class Cabinet
         return $this->color;
     }
 
-    /** @return array{id: string, name: string, code: string, color: string} */
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): void
+    {
+        $this->active = $active;
+    }
+
+    /** @return array{id: string, name: string, code: string, color: string, active: bool} */
     public function toArray(): array
     {
-        return ['id' => $this->id->toRfc4122(), 'name' => $this->name, 'code' => $this->code, 'color' => $this->color];
+        return ['id' => $this->id->toRfc4122(), 'name' => $this->name, 'code' => $this->code, 'color' => $this->color, 'active' => $this->active];
     }
 }

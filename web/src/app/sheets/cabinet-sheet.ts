@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { FormsModule } from '@angular/forms';
 import { Actions } from '../core/actions';
 import { PlanningStore } from '../core/planning.store';
-import { PALETTE, autoCode, freeColor } from '../core/rules';
+import { PALETTE, autoCode, freeColor, futureDays, jours } from '../core/rules';
 import { UiState } from '../core/ui.state';
 import { Icon } from '../shared/icon';
 import { DeleteBlock, SheetHead } from './sheet-head';
@@ -80,6 +80,13 @@ const tmp = () => 'tmp' + ++seq;
         <button class="btn" (click)="addNote()">Ajouter</button></div>
       <p class="hint">Ne notez ni nom de patient ni information de santé.</p>
     </div>
+    @if (id()) {
+      <div class="f">
+        <label class="chk"><input type="checkbox" switch role="switch" [ngModel]="active()" (ngModelChange)="active.set($event)">Cabinet actif</label>
+        <p class="hint">En veille, le cabinet n'apparaît plus dans les choix d'ajout. Ses jours et ses compteurs restent.</p>
+        @if (!active() && wasActive && future() > 0) { <p class="hint"><strong>Il reste {{ jours(future()) }} prévu{{ future() >= 2 ? 's' : '' }} : {{ future() >= 2 ? 'ils restent' : 'il reste' }} au planning.</strong></p> }
+      </div>
+    }
     @if (err()) { <p class="err" role="alert">{{ err() }}</p> }
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn primary big" [disabled]="actions.busy()" (click)="save()">Enregistrer le cabinet</button>
@@ -108,6 +115,11 @@ export class CabinetSheet {
   protected pickName = signal('');
   protected confirmPick = signal(false);
   protected err = signal('');
+  protected jours = jours;
+  /** Interrupteur « Cabinet actif » (modification seulement) ; appliqué après l'enregistrement, avec « Annuler ». */
+  protected active = signal(true);
+  protected wasActive = true;
+  protected future = computed(() => futureDays(this.store.planning().days, this.id() ?? ''));
 
   protected inPalette = computed(() => PALETTE.some(c => c.toLowerCase() === this.color().toLowerCase()));
   protected pickedText = computed(() => { const p = this.pick(); return (p ? (p.kind === 'nurse' ? this.nurses() : this.notes()).find(r => r.key === p.key)?.text : '') ?? ''; });
@@ -125,6 +137,7 @@ export class CabinetSheet {
     const c = this.id() ? this.store.cabinets().find(x => x.id === this.id()) : null;
     if (c) {
       this.name.set(c.name); this.code.set(c.code); this.color.set(c.color); this.codeTouched = true;
+      this.active.set(c.active); this.wasActive = c.active;
       this.nurses.set(this.store.nursesOf(c.id).map(n => ({ key: n.id, id: n.id, text: n.name })));
       this.notes.set(this.store.cabNotes(c.id).map(n => ({ key: n.id, id: n.id, text: n.text })));
     } else {
@@ -183,6 +196,10 @@ export class CabinetSheet {
       notes: this.notes().map(n => (n.id ? { id: n.id, text: n.text } : { text: n.text })),
     });
     if (!r.ok) { this.err.set(r.error ?? ''); return; }
+    if (this.id() && this.active() !== this.wasActive) {
+      const a = await this.actions.setCabinetActive(this.id()!, this.active());
+      if (!a.ok) { this.err.set(a.error ?? ''); return; }
+    }
     const newId = r.result?.['cabinetId'] as string | undefined;
     const add = this.ui.add();
     if (this.ret() === 'add' && add && newId) {

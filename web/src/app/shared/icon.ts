@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-export type IconName = 'prev' | 'next' | 'go' | 'plus' | 'x' | 'check' | 'cal' | 'chart' | 'note' | 'logo';
+export type IconName = 'prev' | 'next' | 'go' | 'plus' | 'x' | 'check' | 'cal' | 'chart' | 'note' | 'logo' | 'up' | 'down';
 
 /** Icônes du prototype (traits SVG). */
 @Component({
@@ -12,6 +12,8 @@ export type IconName = 'prev' | 'next' | 'go' | 'plus' | 'x' | 'check' | 'cal' |
       @switch (name()) {
         @case ('prev') { <path d="M15 5l-7 7 7 7"/> }
         @case ('next') { <path d="M9 5l7 7-7 7"/> }
+        @case ('up') { <path d="M5 15l7-7 7 7"/> }
+        @case ('down') { <path d="M5 9l7 7 7-7"/> }
         @case ('go') { <path d="M9 5l7 7-7 7"/> }
         @case ('plus') { <path d="M12 5v14M5 12h14"/> }
         @case ('x') { <path d="M6 6l12 12M18 6L6 18"/> }

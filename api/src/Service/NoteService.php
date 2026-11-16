@@ -36,10 +36,14 @@ final class NoteService
         return ['note' => $note, 'undoId' => $undoId];
     }
 
-    public function update(Note $note, string $text): void
+    /** @return array{undoId: ?string} */
+    public function update(User $user, Note $note, string $text): array
     {
+        $undoId = $this->undo->record($user, [UndoService::put($note)]);
         $note->setText($text);
         $this->em->flush();
+
+        return ['undoId' => $undoId];
     }
 
     /** @return array{undoId: ?string} */

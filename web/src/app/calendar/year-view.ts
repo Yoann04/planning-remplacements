@@ -28,14 +28,15 @@ import { ViewSwitch } from '../shared/view-switch';
       }
     </div>
     <div class="sum"><strong>{{ jours(total()) }}</strong><span>en {{ ui.cur().getFullYear() }}</span></div>
-    <app-legend />
+    <app-legend [range]="range()" />
     <p class="hint">Touchez un mois pour l'ouvrir et modifier vos jours.</p>`,
 })
 export class YearView {
   protected ui = inject(UiState);
   private store = inject(PlanningStore);
   protected jours = jours;
-  protected total = computed(() => { const [f, t] = yearRange(this.ui.cur()); return dayTotals(this.store.planning().days, f, t).total; });
+  protected range = computed(() => yearRange(this.ui.cur()));
+  protected total = computed(() => { const [f, t] = this.range(); return dayTotals(this.store.planning().days, f, t).total; });
 
   protected months = computed(() => {
     const y = this.ui.cur().getFullYear(), today = todayKey(), now = new Date();

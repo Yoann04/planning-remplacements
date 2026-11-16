@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { Slot } from '../core/models';
 import { PlanningStore } from '../core/planning.store';
-import { SLOT_LABEL } from '../core/rules';
+import { SLOT_LABEL, addChoices } from '../core/rules';
 import { Icon } from './icon';
 
 export interface PickState { cab: string | null; nurse: string | null; slot: Slot; rest: boolean }
@@ -17,9 +17,9 @@ export interface PickState { cab: string | null; nurse: string | null; slot: Slo
     <div class="f">
       <div class="lbl">{{ st.rest ? 'Cabinet' : '1 · Cabinet' }}</div>
       <div class="opts">
-        @for (c of store.cabinets(); track c.id) {
+        @for (c of choices(); track c.id) {
           <button class="opt cab kc" [style.--kc]="c.color" [attr.aria-pressed]="st.cab === c.id && !st.rest" (click)="pickCab(c.id)"><span class="chip">{{ c.code }}</span>{{ c.name }}</button>
-        } @empty { <span class="hint">Aucun cabinet. Créez-en un.</span> }
+        } @empty { <span class="hint">{{ store.cabinets().length ? 'Tous vos cabinets sont en veille. Réactivez-en un dans Mon activité, ou créez-en un.' : 'Aucun cabinet. Créez-en un.' }}</span> }
         @if (allowRest()) { <button class="opt restopt" [attr.aria-pressed]="st.rest" (click)="change.emit({ ...st, rest: !st.rest })">Repos voulu</button> }
         @if (allowNewCabinet()) { <button class="opt dash" (click)="newCabinet.emit()"><app-icon name="plus" [stroke]="2.6" />Nouveau cabinet</button> }
       </div>
@@ -55,10 +55,14 @@ export class Pickers {
   readonly allowRest = input(false);
   readonly allowNewCabinet = input(false);
   readonly addMode = input(false);
+  /** Jour modifié : son cabinet reste proposé même s'il est en veille. */
+  readonly keepCab = input<string | null>(null);
   readonly change = output<PickState>();
   readonly newCabinet = output<void>();
   protected slots: Slot[] = ['full', 'am', 'pm'];
   protected label = SLOT_LABEL;
+  /** Cabinets en veille exclus (sauf celui du jour qu'on modifie). */
+  protected choices = computed(() => addChoices(this.store.cabinets(), this.keepCab()));
   protected nurses = computed(() => this.store.nursesOf(this.state().cab));
 
   /** Choisir un cabinet présélectionne son infirmière s'il n'en a qu'une. */

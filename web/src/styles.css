@@ -34,6 +34,8 @@ h1,h2,h3,p{margin:0}
 #app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column}
 #main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:8px 0 16px;display:flex;flex-direction:column;gap:12px}
 #main>*{flex:none}
+/* Les écrans sont des composants en display:contents : leurs enfants sont les vrais éléments de la colonne ; ils ne doivent pas rétrécir quand la page défile. */
+#main>*>*{flex-shrink:0}
 /* Calendrier : le balayage horizontal change de période ; le défilement vertical et le zoom restent au navigateur. */
 #main.swipe{touch-action:pan-y pinch-zoom}
 #bar{flex:none}
@@ -266,3 +268,7 @@ app-root{display:block;height:100%}
 .loading{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--ink2)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 button:disabled{opacity:.55;cursor:default}
+/* Cabinets en veille (retour du 16/11) */
+.standby-t{width:100%;justify-content:space-between;height:52px;font-size:16px}
+.cabcard.asleep{opacity:.72}
+.asleep-card{border-style:dashed}

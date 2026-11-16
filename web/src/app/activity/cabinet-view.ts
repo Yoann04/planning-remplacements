@@ -1,9 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { Actions } from '../core/actions';
 import { DOW3, dow, mabbr, monthRange, parseKey, todayKey, yearRange } from '../core/dates';
 import { WorkDay } from '../core/models';
 import { PlanningStore } from '../core/planning.store';
-import { SLOT_LABEL, SLOT_ORDER, cabinetNotes, num, slotValue } from '../core/rules';
+import { SLOT_LABEL, SLOT_ORDER, cabinetNotes, futureDays, jours, num, slotValue } from '../core/rules';
 import { UiState } from '../core/ui.state';
 import { DatePickers } from '../shared/date-pickers';
 import { Icon } from '../shared/icon';
@@ -21,6 +22,10 @@ import { Icon } from '../shared/icon';
         <button class="btn primary" style="height:44px;padding:0 20px" (click)="ui.openSheet({ type: 'cab', id: cb.id, ret: null })">Modifier</button>
       </div>
       <div class="cabtitle kc" [style.--kc]="cb.color"><span class="chip">{{ cb.code }}</span><h1>{{ cb.name }}</h1></div>
+      @if (!cb.active) {
+        <div class="card asleep-card"><p><strong>Cabinet en veille.</strong> Il n'apparaît plus dans les choix d'ajout. Ses jours et ses compteurs restent.</p>
+          <button class="btn primary big" [disabled]="actions.busy()" (click)="setActive(true)">Réactiver le cabinet</button></div>
+      }
       <div class="seg" role="group" aria-label="Période">
         <button [attr.aria-pressed]="ui.cabPeriod() === 'month'" (click)="ui.cabPeriod.set('month')">Mois</button>
         <button [attr.aria-pressed]="ui.cabPeriod() === 'year'" (click)="ui.cabPeriod.set('year')">Année</button>
@@ -63,6 +68,15 @@ import { Icon } from '../shared/icon';
       <div class="dlist kc" [style.--kc]="cb.color">
         @for (r of data().todo; track r.id) { <ng-container *ngTemplateOutlet="row; context: { $implicit: r }" /> } @empty { <p class="hint">Aucun jour prévu sur cette période.</p> }
       </div>
+      @if (cb.active) {
+        @if (confirmStandby()) {
+          <div class="card"><p><strong>Mettre {{ cb.name }} en veille ?</strong> Il reste {{ jours(future()) }} prévu{{ future() >= 2 ? 's' : '' }} : {{ future() >= 2 ? 'ils restent' : 'il reste' }} au planning.</p>
+            <div class="row"><button class="btn" (click)="confirmStandby.set(false)">Non, garder actif</button><button class="btn primary" [disabled]="actions.busy()" (click)="setActive(false)">Mettre en veille</button></div></div>
+        } @else {
+          <button class="btn" (click)="askStandby()">Mettre en veille</button>
+          <p class="hint">Remplacement terminé ? En veille, le cabinet n'apparaît plus dans les choix d'ajout. Ses jours et ses compteurs restent.</p>
+        }
+      }
       <ng-template #row let-r>
         <button class="drow" (click)="ui.openDay(r.date)"><div><b>{{ rowDate(r.date) }}</b><small>{{ store.nurse(r.nurseId)?.name ?? 'Sans infirmière indiquée' }}</small></div><em>{{ r.slot === 'full' ? 'Journée' : slotLabel[r.slot] + ' · ½' }}</em></button>
       </ng-template>
@@ -71,7 +85,12 @@ import { Icon } from '../shared/icon';
 export class CabinetView {
   protected ui = inject(UiState);
   protected store = inject(PlanningStore);
+  protected actions = inject(Actions);
   protected num = num;
+  protected jours = jours;
+  protected confirmStandby = signal(false);
+  /** Jours encore prévus dans ce cabinet (toutes périodes), pour la confirmation de mise en veille. */
+  protected future = computed(() => futureDays(this.store.planning().days, this.ui.actCab() ?? ''));
   protected slotLabel: Record<string, string> = SLOT_LABEL;
 
   protected cab = computed(() => this.store.cabinets().find(c => c.id === this.ui.actCab()) ?? null);
@@ -111,6 +130,17 @@ export class CabinetView {
   constructor() {
     // Cabinet supprimé pendant qu'on le regarde : retour à « Mon activité ».
     effect(() => { if (this.ui.actCab() && this.store.loaded() && !this.cab()) this.ui.actCab.set(null); });
+  }
+
+  /** Mise en veille : confirmation seulement s'il reste des jours prévus (la mise en veille n'est jamais bloquée). */
+  protected askStandby(): void {
+    if (this.future() > 0) this.confirmStandby.set(true);
+    else void this.setActive(false);
+  }
+
+  protected async setActive(active: boolean): Promise<void> {
+    this.confirmStandby.set(false);
+    await this.actions.setCabinetActive(this.ui.actCab()!, active);
   }
 
   protected rowDate(k: string): string {

@@ -34,6 +34,12 @@ final class CabinetNotesTest extends ApiTestCase
         );
         self::assertCount(4, $notes);
 
+        // Modifier puis annuler : le texte d'origine revient.
+        $m = $this->api('PUT', '/api/notes/'.$r['noteId'], ['text' => 'Clé chez le pharmacien']);
+        self::assertContains('Clé chez le pharmacien', array_column($m['planning']['notes'], 'text'));
+        $m = $this->api('POST', '/api/undo/'.$m['undoId']);
+        self::assertContains('Clé chez la voisine', array_column($m['planning']['notes'], 'text'));
+
         // Annuler l'ajout depuis la fiche du cabinet
         $r = $this->api('POST', '/api/undo/'.$r['undoId']);
         self::assertResponseIsSuccessful();

@@ -20,7 +20,7 @@ import { DeleteBlock, SheetHead } from './sheet-head';
     } @else {
       <app-sheet-head [title]="title()" />
       <p class="sub">{{ sub() }}</p>
-      <app-pickers [state]="st()" [allowRest]="!!dates()" (change)="st.set($event); err.set('')" />
+      <app-pickers [state]="st()" [allowRest]="!!dates()" [keepCab]="keepCab" (change)="st.set($event); err.set('')" />
       @if (err()) { <p class="err" role="alert">{{ err() }}</p> }
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn primary big" [disabled]="actions.busy()" (click)="save()">{{ dates() ? 'Ajouter' : 'Enregistrer' }}</button>
@@ -42,13 +42,15 @@ export class EntrySheet {
 
   protected st = signal<PickState>({ cab: null, nurse: null, slot: 'full', rest: false });
   protected err = signal('');
+  /** Cabinet d'origine du jour modifié (proposé même s'il est en veille). */
+  protected keepCab: string | null = null;
 
   protected title = computed(() => { const n = this.dates()?.length ?? 0; return n ? `Ajouter ${n} jour${n > 1 ? 's' : ''}` : this.id() ? 'Modifier ce jour' : 'Ajouter un cabinet'; });
   protected sub = computed(() => (this.dates() ? cap(listDates(this.dates()!)) : dayLabel(this.date()!)));
 
   ngOnInit(): void {
     const e = this.id() ? this.store.entries(this.date()!).find(x => x.id === this.id()) : null;
-    if (e) this.st.set({ cab: e.cabinetId, nurse: e.nurseId, slot: e.slot, rest: false });
+    if (e) { this.st.set({ cab: e.cabinetId, nurse: e.nurseId, slot: e.slot, rest: false }); this.keepCab = e.cabinetId; }
   }
 
   protected del = async () => {

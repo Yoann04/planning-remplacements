@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Note, WorkDay } from './models';
-import { autoCode, cabinetNotes, dayTotals, entryClash, freeColor, jours, overlaps, restClash, slotValue } from './rules';
+import { Cabinet, Note, WorkDay } from './models';
+import { addChoices, autoCode, cabinetNotes, dayTotals, futureDays, legendCabinets, entryClash, freeColor, jours, overlaps, restClash, slotValue } from './rules';
 
 const wd = (date: string, slot: WorkDay['slot'], cabinetId = 'c1'): WorkDay => ({ id: date + slot + cabinetId, date, cabinetId, nurseId: null, slot });
 
@@ -52,7 +52,7 @@ describe('règles du planning', () => {
 
   it('propose une couleur libre', () => {
     expect(freeColor([])).toBe('#E5484D');
-    expect(freeColor([{ id: '1', name: 'A', code: 'A', color: '#e5484d' }])).toBe('#F76B15');
+    expect(freeColor([{ id: '1', name: 'A', code: 'A', color: '#e5484d', active: true }])).toBe('#F76B15');
   });
 });
 
@@ -80,5 +80,32 @@ describe('pense-bêtes d\'un cabinet', () => {
   it('ignore les pense-bêtes des jours et des autres cabinets', () => {
     expect(cabinetNotes(p, 'c2').map(n => n.text)).toEqual(['autre cabinet', 'infirmière Paul']);
     expect(cabinetNotes(p, 'inconnu')).toEqual([]);
+  });
+});
+
+describe('cabinets en veille', () => {
+  const cab = (id: string, active: boolean): Cabinet => ({ id, name: id, code: id.slice(0, 2).toUpperCase(), color: '#3B82F6', active });
+  const cabs = [cab('actif', true), cab('veille', false), cab('autre', true)];
+
+  it("retire les cabinets en veille des choix d'ajout", () => {
+    expect(addChoices(cabs).map(c => c.id)).toEqual(['actif', 'autre']);
+  });
+
+  it('garde le cabinet en veille du jour que l\'on modifie', () => {
+    expect(addChoices(cabs, 'veille').map(c => c.id)).toEqual(['actif', 'veille', 'autre']);
+    expect(addChoices(cabs, 'actif').map(c => c.id)).toEqual(['actif', 'autre']);
+  });
+
+  it('légende : seulement les cabinets qui ont des jours dans la période visible, actifs ou non', () => {
+    const days = [wd('2026-11-10', 'full', 'veille'), wd('2026-12-02', 'full', 'actif')];
+    expect(legendCabinets(cabs, days, '2026-11-01', '2026-11-30').map(c => c.id)).toEqual(['veille']);
+    expect(legendCabinets(cabs, days, '2026-01-01', '2026-12-31').map(c => c.id)).toEqual(['actif', 'veille']);
+    expect(legendCabinets(cabs, days, '2027-01-01', '2027-01-31')).toEqual([]);
+  });
+
+  it('compte les jours encore prévus (après aujourd\'hui) dans un cabinet', () => {
+    const days = [wd('2026-11-15', 'full', 'veille'), wd('2026-11-16', 'am', 'veille'), wd('2026-12-01', 'full', 'veille'), wd('2026-12-01', 'full', 'actif')];
+    expect(futureDays(days, 'veille', '2026-11-15')).toBe(1.5);
+    expect(futureDays(days, 'autre', '2026-11-15')).toBe(0);
   });
 });

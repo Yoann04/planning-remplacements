@@ -101,6 +101,15 @@ export class Actions {
     this.go(() => (id ? this.api.updateCabinet(id, c) : this.api.createCabinet(c)), () => 'Cabinet enregistré : ' + c.name.trim(), true);
   deleteCabinet = (id: string) => this.go(() => this.api.deleteCabinet(id), () => 'Cabinet supprimé', true);
 
+  /** Mettre en veille / réactiver (annulable). Un cabinet mis en veille quitte aussi le mode « Ajouter des jours ». */
+  async setCabinetActive(id: string, active: boolean) {
+    const name = this.store.cab(id).name;
+    const r = await this.go(() => this.api.setCabinetActive(id, active), () => (active ? 'Cabinet réactivé : ' : 'Cabinet mis en veille : ') + name);
+    const add = this.ui.add();
+    if (r.ok && !active && add?.cab === id) this.ui.add.set({ ...add, cab: null, nurse: null });
+    return r;
+  }
+
   setZone = (zone: Zone) => this.go(() => this.api.setZone(zone), () => null);
 
 }

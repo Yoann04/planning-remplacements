@@ -34,6 +34,7 @@ export class ApiService {
   createCabinet = (c: CabinetPayload) => this.send('POST', '/cabinets', c);
   updateCabinet = (id: string, c: CabinetPayload) => this.send('PUT', `/cabinets/${id}`, c);
   deleteCabinet = (id: string) => this.send('DELETE', `/cabinets/${id}`);
+  setCabinetActive = (id: string, active: boolean) => this.send('PUT', `/cabinets/${id}/active`, { active });
 
   createNote = (n: { scope: NoteScope; text: string; date?: string; cabinetId?: string; nurseId?: string }) => this.send('POST', '/notes', n);
   updateNote = (id: string, text: string) => this.send('PUT', `/notes/${id}`, { text });

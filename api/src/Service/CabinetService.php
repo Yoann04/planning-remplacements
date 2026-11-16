@@ -26,6 +26,7 @@ final class CabinetService
         private readonly NoteRepository $notes,
         private readonly WorkDayRepository $days,
         private readonly UndoService $undo,
+        private readonly Today $today,
     ) {
     }
 
@@ -123,6 +124,26 @@ final class CabinetService
         $this->em->flush();
 
         return ['days' => \count($days), 'undoId' => $undoId];
+    }
+
+    /**
+     * Met le cabinet en veille ou le réactive (annulable). Rien n'est supprimé : jours, infirmières,
+     * pense-bêtes et compteurs restent. Renvoie le nombre de jours encore prévus (à venir) dans ce cabinet.
+     *
+     * @return array{active: bool, futureDays: float, undoId: ?string}
+     */
+    public function setActive(User $user, Cabinet $cabinet, bool $active): array
+    {
+        $undoId = null;
+        if ($cabinet->isActive() !== $active) {
+            $undoId = $this->undo->record($user, [UndoService::put($cabinet)]);
+            $cabinet->setActive($active);
+            $this->em->flush();
+        }
+        $today = $this->today->date();
+        $future = array_filter($this->days->findByCabinet($cabinet), fn ($d) => $d->getDate() > $today);
+
+        return ['active' => $active, 'futureDays' => array_sum(array_map(fn ($d) => $d->getSlot()->value(), $future)), 'undoId' => $undoId];
     }
 
     /** Supprime une infirmière : ses jours restent dans le planning, sans infirmière indiquée ; ses pense-bêtes partent avec elle. */

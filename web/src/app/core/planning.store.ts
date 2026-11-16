@@ -7,7 +7,7 @@ import { indexPlanning } from './rules';
 import { UiState } from './ui.state';
 
 const EMPTY: Planning = { user: { email: '', zone: 'A' }, cabinets: [], nurses: [], days: [], rests: [], notes: [] };
-const DELETED: Cabinet = { id: '?', name: 'Cabinet supprimé', code: '?', color: '#3B82F6' };
+const DELETED: Cabinet = { id: '?', name: 'Cabinet supprimé', code: '?', color: '#3B82F6', active: false };
 
 /** Données du planning (signaux) et actions qui passent par l'API. */
 @Injectable({ providedIn: 'root' })

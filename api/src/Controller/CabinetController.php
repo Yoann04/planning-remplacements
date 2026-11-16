@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\ActiveInput;
 use App\Dto\CabinetInput;
 use App\Repository\CabinetRepository;
 use App\Service\CabinetService;
@@ -31,6 +32,15 @@ final class CabinetController extends ApiController
         $cabinet = $this->service->save($user, $this->found($this->cabinets->findOwned($user, $id), 'Cabinet introuvable.'), $in->toArray());
 
         return $this->withPlanning(['cabinetId' => $cabinet->getId()->toRfc4122()]);
+    }
+
+    /** Mettre en veille (remplacement terminé) ou réactiver. */
+    #[Route('/{id}/active', methods: ['PUT'])]
+    public function setActive(string $id, #[MapRequestPayload] ActiveInput $in): JsonResponse
+    {
+        $user = $this->me();
+
+        return $this->withPlanning($this->service->setActive($user, $this->found($this->cabinets->findOwned($user, $id), 'Cabinet introuvable.'), $in->active));
     }
 
     #[Route('/{id}', methods: ['DELETE'])]
