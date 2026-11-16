@@ -1,5 +1,5 @@
 import { key, todayKey } from './dates';
-import { Cabinet, Planning, Rest, Slot, WorkDay } from './models';
+import { Cabinet, Note, Planning, Rest, Slot, WorkDay } from './models';
 
 /** Règles et calculs du planning (mêmes règles que l'API, utilisées pour l'affichage). Fonctions pures. */
 export const SLOT_LABEL: Record<Slot, string> = { full: 'Journée', am: 'Matin', pm: 'Après-midi' };
@@ -71,3 +71,15 @@ export function freeColor(cabs: Cabinet[]): string {
 }
 
 export const sameDay = (a: Date, b: Date) => key(a) === key(b);
+
+/**
+ * Pense-bêtes d'un cabinet : d'abord ceux du cabinet, puis ceux de ses infirmières (dans l'ordre des infirmières),
+ * chacun avec le nom de l'infirmière concernée (null pour le cabinet).
+ */
+export function cabinetNotes(p: Pick<Planning, 'nurses' | 'notes'>, cabId: string): (Note & { nurseName: string | null })[] {
+  const out: (Note & { nurseName: string | null })[] = p.notes.filter(n => n.scope === 'cabinet' && n.cabinetId === cabId).map(n => ({ ...n, nurseName: null }));
+  for (const nu of p.nurses.filter(x => x.cabinetId === cabId)) {
+    out.push(...p.notes.filter(n => n.scope === 'nurse' && n.nurseId === nu.id).map(n => ({ ...n, nurseName: nu.name })));
+  }
+  return out;
+}

@@ -14,7 +14,7 @@ export type Sheet =
   | { type: 'cab'; id: string | null; ret: 'add' | null }
   | { type: 'entry'; date: string | null; dates: string[] | null; id: string | null }
   | { type: 'rest'; date: string; editing: boolean }
-  | { type: 'note'; id: string }
+  | { type: 'note'; id: string | null; cabinetId?: string }
   | { type: 'settings' };
 
 interface Back { tab: Tab; view: View; cur: Date; actCab: string | null; cabPeriod: 'month' | 'year'; cabNurse: string; period: Period; scroll: number }

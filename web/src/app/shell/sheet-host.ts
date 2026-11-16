@@ -20,7 +20,7 @@ import { SettingsSheet } from '../sheets/settings-sheet';
           @case ('cab') { <app-cabinet-sheet [id]="$any(sh).id" [ret]="$any(sh).ret" /> }
           @case ('entry') { <app-entry-sheet [date]="$any(sh).date" [dates]="$any(sh).dates" [id]="$any(sh).id" /> }
           @case ('rest') { <app-rest-sheet [date]="$any(sh).date" [editing]="$any(sh).editing" /> }
-          @case ('note') { <app-note-sheet [id]="$any(sh).id" /> }
+          @case ('note') { <app-note-sheet [id]="$any(sh).id" [cabinetId]="$any(sh).cabinetId ?? null" /> }
           @case ('settings') { <app-settings-sheet /> }
         }
       </div>

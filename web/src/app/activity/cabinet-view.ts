@@ -3,12 +3,12 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@a
 import { DOW3, dow, mabbr, monthRange, parseKey, todayKey, yearRange } from '../core/dates';
 import { WorkDay } from '../core/models';
 import { PlanningStore } from '../core/planning.store';
-import { SLOT_LABEL, SLOT_ORDER, num, slotValue } from '../core/rules';
+import { SLOT_LABEL, SLOT_ORDER, cabinetNotes, num, slotValue } from '../core/rules';
 import { UiState } from '../core/ui.state';
 import { DatePickers } from '../shared/date-pickers';
 import { Icon } from '../shared/icon';
 
-/** Fiche d'un cabinet : jours faits et prévus sur le mois ou l'année, filtre par infirmière, bouton « Modifier ». */
+/** Fiche d'un cabinet : jours faits et prévus sur le mois ou l'année, pense-bêtes, filtre par infirmière, bouton « Modifier ». */
 @Component({
   selector: 'app-cabinet-view',
   imports: [Icon, DatePickers, NgTemplateOutlet],
@@ -40,6 +40,13 @@ import { Icon } from '../shared/icon';
         <div class="tile"><b>{{ num(data().sd) }}</b><span>jours faits</span></div>
         <div class="tile"><b>{{ num(data().st) }}</b><span>jours prévus</span></div>
       </div>
+      <h2>Pense-bêtes</h2>
+      <div class="notes">
+        @for (n of notes(); track n.id) {
+          <button class="nrow" (click)="ui.openSheet({ type: 'note', id: n.id })"><app-icon name="note" [size]="18" [stroke]="2" /><div>@if (n.nurseName) { <small>{{ n.nurseName }}</small> }{{ n.text }}</div><span class="go"><app-icon name="go" [size]="18" /></span></button>
+        } @empty { <p class="hint">Aucun pense-bête pour ce cabinet.</p> }
+      </div>
+      <button class="btn" (click)="ui.openSheet({ type: 'note', id: null, cabinetId: cb.id })"><app-icon name="plus" [stroke]="2.6" />Ajouter un pense-bête</button>
       @if (byNurse().length) {
         <h2>Par infirmière</h2>
         <div class="dlist">
@@ -72,6 +79,8 @@ export class CabinetView {
     const [f, t] = this.ui.cabPeriod() === 'month' ? monthRange(this.ui.cur()) : yearRange(this.ui.cur());
     return this.store.planning().days.filter(d => d.cabinetId === this.ui.actCab() && d.date >= f && d.date <= t);
   });
+  /** Pense-bêtes du cabinet, puis ceux de ses infirmières (avec leur nom). */
+  protected notes = computed(() => cabinetNotes(this.store.planning(), this.ui.actCab() ?? ''));
   private orphan = computed(() => this.all().some(d => !d.nurseId));
   private nurses = computed(() => this.store.nursesOf(this.ui.actCab()));
   protected filters = computed(() => [{ id: 'all', name: 'Toutes' }, ...this.nurses().map(n => ({ id: n.id, name: n.name })), ...(this.orphan() ? [{ id: '-', name: 'Sans infirmière' }] : [])]);

@@ -92,8 +92,8 @@ export class Actions {
   saveRest = (date: string, slot: Slot) => this.go(() => this.api.setRest(date, slot), () => restText(slot) + ' noté', true);
   deleteRest = (date: string) => this.go(() => this.api.deleteRest(date), () => 'Repos supprimé', true);
 
-  addNote = (scope: NoteScope, text: string, target: { date?: string; cabinetId?: string; nurseId?: string }) =>
-    this.go(() => this.api.createNote({ scope, text, ...target }), () => 'Pense-bête ajouté');
+  addNote = (scope: NoteScope, text: string, target: { date?: string; cabinetId?: string; nurseId?: string }, inline = false) =>
+    this.go(() => this.api.createNote({ scope, text, ...target }), () => 'Pense-bête ajouté', inline);
   saveNote = (id: string, text: string) => this.go(() => this.api.updateNote(id, text), () => 'Pense-bête modifié', true);
   deleteNote = (id: string) => this.go(() => this.api.deleteNote(id), () => 'Pense-bête supprimé', true);
 

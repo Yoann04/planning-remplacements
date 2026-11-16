@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { WorkDay } from './models';
-import { autoCode, dayTotals, entryClash, freeColor, jours, overlaps, restClash, slotValue } from './rules';
+import { Note, WorkDay } from './models';
+import { autoCode, cabinetNotes, dayTotals, entryClash, freeColor, jours, overlaps, restClash, slotValue } from './rules';
 
 const wd = (date: string, slot: WorkDay['slot'], cabinetId = 'c1'): WorkDay => ({ id: date + slot + cabinetId, date, cabinetId, nurseId: null, slot });
 
@@ -53,5 +53,32 @@ describe('règles du planning', () => {
   it('propose une couleur libre', () => {
     expect(freeColor([])).toBe('#E5484D');
     expect(freeColor([{ id: '1', name: 'A', code: 'A', color: '#e5484d' }])).toBe('#F76B15');
+  });
+});
+
+describe('pense-bêtes d\'un cabinet', () => {
+  const note = (id: string, scope: Note['scope'], target: Partial<Note>): Note => ({ id, scope, date: null, cabinetId: null, nurseId: null, text: id, ...target });
+  const p = {
+    nurses: [{ id: 'n1', cabinetId: 'c1', name: 'Hélène' }, { id: 'n2', cabinetId: 'c1', name: 'Anne' }, { id: 'n3', cabinetId: 'c2', name: 'Paul' }],
+    notes: [
+      note('infirmière Anne', 'nurse', { nurseId: 'n2' }),
+      note('autre cabinet', 'cabinet', { cabinetId: 'c2' }),
+      note('jour', 'day', { date: '2026-11-20' }),
+      note('cabinet 1', 'cabinet', { cabinetId: 'c1' }),
+      note('infirmière Hélène', 'nurse', { nurseId: 'n1' }),
+      note('infirmière Paul', 'nurse', { nurseId: 'n3' }),
+      note('cabinet 2', 'cabinet', { cabinetId: 'c1' }),
+    ],
+  };
+
+  it('met ceux du cabinet d\'abord, puis ceux de ses infirmières avec leur nom', () => {
+    expect(cabinetNotes(p, 'c1').map(n => [n.text, n.nurseName])).toEqual([
+      ['cabinet 1', null], ['cabinet 2', null], ['infirmière Hélène', 'Hélène'], ['infirmière Anne', 'Anne'],
+    ]);
+  });
+
+  it('ignore les pense-bêtes des jours et des autres cabinets', () => {
+    expect(cabinetNotes(p, 'c2').map(n => n.text)).toEqual(['autre cabinet', 'infirmière Paul']);
+    expect(cabinetNotes(p, 'inconnu')).toEqual([]);
   });
 });
