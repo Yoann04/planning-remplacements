@@ -13,6 +13,10 @@ Captures : [`docs/captures/`](docs/captures/) · Architecture : [`ARCHITECTURE.m
 |---|---|---|---|
 | ![](docs/captures/02-mois.jpg) | ![](docs/captures/03-jour.jpg) | ![](docs/captures/04-activite.jpg) | ![](docs/captures/05-ajout-glisser.jpg) |
 
+| Fiche d'un cabinet (pense-bêtes) | Cabinets en veille |
+|---|---|
+| ![](docs/captures/09-fiche-cabinet.jpg) | ![](docs/captures/10-cabinets-en-veille.jpg) |
+
 ## Arborescence
 
 ```
@@ -81,14 +85,16 @@ front et API sont vus sur la même origine, comme en production.
 cd api && php bin/phpunit
 ```
 
-29 tests : connexion et jeton, mot de passe haché, limitation des tentatives, isolation entre utilisateurs,
-règles repos / cabinet, annulation, suppression en cascade, compteurs. Base SQLite jetable (`.env.test`).
+36 tests : connexion et jeton, mot de passe haché, limitation des tentatives, isolation entre utilisateurs,
+règles repos / cabinet, annulation, suppression en cascade, compteurs, pense-bêtes d'un cabinet,
+cabinets en veille. Base SQLite jetable (`.env.test`).
 
 ```bash
 npm --prefix web test -- --watch=false
 ```
 
-16 tests Vitest sur les règles de calcul : demi-journées, chevauchements, jours faits / prévus, jours fériés (Pâques), vacances par zone, dates en français.
+27 tests Vitest sur les fonctions pures : demi-journées, chevauchements, jours faits / prévus, jours fériés (Pâques), vacances par zone,
+dates en français, regroupement des pense-bêtes d'un cabinet, choix d'ajout sans les cabinets en veille, légende, balayage (seuils, bords, mode ajout).
 
 ## Mise à jour annuelle des vacances scolaires
 
@@ -112,7 +118,7 @@ Première installation (déjà faite) :
 4. Comptes : `php bin/console app:user:create <e-mail>` en SSH (mot de passe tapé en masqué).
 5. Sur l'iPhone : ouvrir le site dans Safari → Partager → « Sur l'écran d'accueil ».
 
-Mise à jour :
+Mise à jour (s'il y a une nouvelle migration : sauvegarder la base d'abord, voir `DECISIONS.md` du 16/11) :
 
 ```bash
 npm --prefix web run build

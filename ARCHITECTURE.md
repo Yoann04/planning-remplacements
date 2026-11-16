@@ -37,6 +37,9 @@ la **simplicité** et la **justesse des règles**, pas la montée en charge.
 - Ajouter un repos sur une période déjà occupée est **refusé** (422, message affiché tel quel).
 - Si le cabinet a des infirmières, il faut en choisir une ; elle doit appartenir à ce cabinet.
 - Supprimer une infirmière garde ses jours, « sans infirmière indiquée ».
+- **Cabinet en veille** (`Cabinet::active = false`, remplacement terminé) : il ne reçoit plus de nouveau jour (422), y compris
+  en y déplaçant un jour d'un autre cabinet ; ses jours déjà placés restent modifiables et supprimables, et comptent toujours
+  dans les compteurs. Mise en veille et réactivation par `PUT /api/cabinets/{id}/active`, annulables. Rien n'est supprimé.
 
 ### Annuler (après chaque modification)
 
@@ -44,6 +47,8 @@ Chaque modification enregistre dans `UndoLog` la liste des **opérations inverse
 ou `put` (remettre une ligne dans l'état noté). `POST /api/undo/{id}` les rejoue dans une transaction.
 Les identifiants sont des **UUID v7 générés par le serveur** : une ligne supprimée revient avec le même identifiant.
 Supprimer un cabinet note le cabinet, ses infirmières, ses jours et ses pense-bêtes : l'annulation remet tout à l'identique (testé).
+Une seule exception : « Enregistrer le cabinet » (nom, couleur, infirmières, pense-bêtes envoyés en bloc) n'est pas annulable ;
+la mise en veille, elle, l'est.
 
 ### Réponse des modifications
 
@@ -73,7 +78,7 @@ Migration MySQL / MariaDB (`migrations/Version20261113000000.php`). Index `(owne
 
 | Dossier | Rôle |
 |---|---|
-| `core/dates.ts`, `holidays.ts`, `rules.ts` | **Fonctions pures** : dates en français, jours fériés (calcul de Pâques), vacances par zone, règles de chevauchement, compteurs. Testées avec Vitest. |
+| `core/dates.ts`, `holidays.ts`, `rules.ts`, `swipe.ts` | **Fonctions pures** : dates en français, jours fériés (calcul de Pâques), vacances par zone, règles de chevauchement, compteurs, pense-bêtes d'un cabinet, choix d'ajout (sans les cabinets en veille), légende, décision du balayage. Testées avec Vitest. |
 | `core/api.service.ts` | Un appel HTTP par route de l'API. |
 | `core/auth.service.ts` + `auth.interceptor.ts` | Jeton JWT (localStorage si « Rester connectée », sinon sessionStorage), ajout de l'en-tête, déconnexion si le jeton est refusé. |
 | `core/planning.store.ts` | Le planning en **signaux** + index par date (calculé) ; `run()` applique la réponse et affiche le message avec « Annuler ». |
@@ -88,9 +93,14 @@ Migration MySQL / MariaDB (`migrations/Version20261113000000.php`). Index `(owne
 - **Styles du prototype repris tels quels** (`styles.css`) : le prototype validé fait foi, on n'a pas réinterprété le design. Thème clair / sombre automatique.
 - **« Mon activité »** affiche les compteurs calculés par l'API (`/api/stats`, rechargés via `resource()` quand le planning change) ; le calendrier calcule ses petits totaux localement avec les mêmes règles.
 - **Glisser pour sélectionner** (mode « Ajouter des jours ») : évènements *pointer* + `setPointerCapture` + `elementFromPoint`, `touch-action: none` sur la grille. **Jamais testé sur un vrai iPhone** : à vérifier à l'étape 4.
+- **Balayer pour changer de période** (calendrier) : `touchstart` / `touchend` sur la zone qui défile, décision dans
+  `swipeStep()` (60 px minimum, geste nettement horizontal, 20 px de bord laissés au geste « retour » d'iOS, ignoré en mode
+  ajout, avec une fenêtre ouverte et dans « Mon activité »). `touch-action: pan-y pinch-zoom` laisse au navigateur le défilement
+  vertical et le zoom. Même effet que les flèches. **À vérifier sur un vrai iPhone.**
 - **PWA** : manifeste, icônes, service worker Angular (coquille hors ligne ; les données passent toujours par l'API, `/api` exclu du cache).
 
 ## Tests
 
-- API : 29 tests PHPUnit (fonctionnels via HTTP + unitaires), base SQLite recréée à chaque lancement, horloge figée au 15/11/2026 pour tester « faits / prévus ».
-- Front : 16 tests Vitest sur les fonctions pures.
+- API : 36 tests PHPUnit (fonctionnels via HTTP + unitaires), base SQLite recréée à chaque lancement, horloge figée au 15/11/2026 pour tester « faits / prévus ».
+  La migration elle-même est vérifiée à la main sur MySQL (les tests construisent le schéma depuis les entités).
+- Front : 27 tests Vitest sur les fonctions pures.
